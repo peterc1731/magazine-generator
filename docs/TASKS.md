@@ -45,10 +45,10 @@ Goal: prove fetch → extract → ePub works before adding every source.
 - [x] Inclusion threshold config + article status tracking (`pending`/`included`/`excluded`) — `pipeline/curation.py`, threshold from `settings_store`; duplicates are always excluded regardless of threshold
 
 ## Phase 5 — Full ePub Generation
-- [ ] Section-grouped table of contents / chapter ordering
-- [ ] Generated cover image (Pillow, issue date/number)
-- [ ] Per-article byline/source/date front-matter in each chapter
-- [ ] Image re-hosting: download and embed images referenced in cleaned content
+- [x] Section-grouped table of contents / chapter ordering — `EpubArticleInput.section`, chapters grouped into nested `epub.Section` TOC entries in order of first appearance
+- [x] Generated cover image (Pillow, issue date/number) — `_generate_cover_image`. Found and fixed a real bug while eyeballing the output: Pillow's bundled fallback font can't render "—", so the cover showed a broken glyph box; now prefers a real system TTF (DejaVu/Liberation, both present on this box) and normalizes dashes as a safety net if neither is installed on the deploy target.
+- [x] Per-article byline/source/date front-matter in each chapter — unchanged from Phase 2, carried into the section-grouped structure
+- [x] Image re-hosting: download and embed images referenced in cleaned content — `_rehost_images`: downloads each `<img>`'s bytes, adds them to the epub manifest, rewrites `src` to the local file; an image that fails to fetch or isn't a recognized image type is dropped rather than left as a dangling remote link. This closes the gap found during the real Guardian API run in Phase 2.
 
 ## Phase 6 — Job Orchestration
 - [ ] APScheduler worker process, cron expression read from `settings`
