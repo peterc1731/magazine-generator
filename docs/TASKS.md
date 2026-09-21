@@ -12,10 +12,10 @@ build an ePub) before fanning out to every source, and get the pipeline
 working headlessly before building the web UI on top of it.
 
 ## Phase 0 — Project Scaffolding
-- [ ] Repo layout (`app/`, `connectors/`, `pipeline/`, `docs/`, etc.), package/dependency management (uv/poetry), lint/format config
-- [ ] Config & secrets handling (env vars for API keys, `.env.example`)
-- [ ] Base FastAPI app skeleton (no routes yet, just health check)
-- [ ] CI: basic lint + test run on push
+- [x] Repo layout (`app/`, `connectors/`, `pipeline/`, `docs/`, etc.), package/dependency management (uv), lint/format config — `pyproject.toml` (uv + ruff), `app/`, `connectors/`, `pipeline/`, `tests/`
+- [x] Config & secrets handling (env vars for API keys, `.env.example`) — `app/config.py` (pydantic-settings), `.env.example`
+- [x] Base FastAPI app skeleton (no routes yet, just health check) — `app/main.py`, `GET /health`
+- [x] CI: basic lint + test run on push — `.github/workflows/ci.yml` (uv sync, ruff check, pytest)
 
 ## Phase 1 — Data Layer
 - [ ] SQLAlchemy models for `sources`, `articles`, `issues`, `issue_articles`, `job_runs`, `settings` (Architecture §4)
