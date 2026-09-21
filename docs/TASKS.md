@@ -32,11 +32,11 @@ Goal: prove fetch → extract → ePub works before adding every source.
 - [x] Manual script/CLI to run the slice end-to-end and produce a real `.epub` file to sanity-check on the e-reader — `scripts/build_issue.py`; wiring smoke-tested against a mocked Guardian API, produces a valid, re-openable ePub. **Still needs a real `GUARDIAN_API_KEY` run and an actual e-reader sideload check** — not done in this environment.
 
 ## Phase 3 — Remaining Source Connectors
-- [ ] `RSSConnector` for BBC News, incl. full-article fetch through the extraction pipeline — Architecture §5.1
-- [ ] `WebArchiveConnector` for Dense Discovery — confirm archive URL/pagination pattern, implement issue-link discovery — Architecture §5.3
-- [ ] `WebArchiveConnector` config for bytes.dev (reuse connector, site-specific selectors)
-- [ ] `XBookmarksConnector`: OAuth 2.0 + PKCE authorization flow, token storage/refresh, bookmarks fetch + cursor — Architecture §5.4
-- [ ] Set up X developer account/credits, do a small live test call before wiring into the pipeline
+- [x] `RSSConnector` for BBC News, incl. full-article fetch through the extraction pipeline — Architecture §5.1 — `connectors/rss.py`, tested against a recorded feed + two article-page fixtures
+- [x] `WebArchiveConnector` — generic connector (archive page → issue links → extraction), tested against fixtures — `connectors/web_archive.py`. **Archive URL/link-selector still unverified against the live sites** (egress to both domains is blocked in this environment) — `connectors/newsletters.py` docstring flags this explicitly; confirm before a real run.
+- [x] `WebArchiveConnector` config for bytes.dev (reuse connector, site-specific selectors) — `connectors/newsletters.py` (same live-verification caveat as above)
+- [x] `XBookmarksConnector`: OAuth 2.0 + PKCE authorization flow, token storage/refresh, bookmarks fetch + cursor — Architecture §5.4 — `connectors/x_oauth.py` (PKCE + token exchange/refresh), `connectors/x_bookmarks.py` (paginated fetch, stops at cursor, auto-refreshes on 401), all tested against mocked responses. `scripts/x_oauth_setup.py` is the one-time interactive flow to populate `.env`.
+- [ ] Set up X developer account/credits, do a small live test call before wiring into the pipeline — **requires the user's own X developer account/credits; not something this environment can do.**
 
 ## Phase 4 — Curation & Classification
 - [ ] Interest profile storage + a way to edit it (can be a raw settings row before the UI exists)

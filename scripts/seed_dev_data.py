@@ -3,18 +3,23 @@
 Usage: uv run python scripts/seed_dev_data.py
 """
 
+from dataclasses import asdict
+
 from app.db import SessionLocal, init_db
 from app.models import Source, SourceType
+from connectors.newsletters import BYTES_DEV_CONFIG, DENSE_DISCOVERY_CONFIG
 
 SEED_SOURCES = [
     Source(name="The Guardian", type=SourceType.GUARDIAN_API, config={"section": "world"}),
-    Source(name="BBC News", type=SourceType.RSS, config={"feed_url": "https://feeds.bbci.co.uk/news/rss.xml"}),
     Source(
-        name="Dense Discovery",
-        type=SourceType.WEB_ARCHIVE,
-        config={"archive_url": "https://www.densediscovery.com/issues/"},
+        name="BBC News",
+        type=SourceType.RSS,
+        config={"feed_url": "https://feeds.bbci.co.uk/news/rss.xml"},
     ),
-    Source(name="bytes.dev", type=SourceType.WEB_ARCHIVE, config={"archive_url": "https://bytes.dev/archives"}),
+    Source(
+        name="Dense Discovery", type=SourceType.WEB_ARCHIVE, config=asdict(DENSE_DISCOVERY_CONFIG)
+    ),
+    Source(name="bytes.dev", type=SourceType.WEB_ARCHIVE, config=asdict(BYTES_DEV_CONFIG)),
     Source(name="X Bookmarks", type=SourceType.X_BOOKMARKS, config={}),
 ]
 

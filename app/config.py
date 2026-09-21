@@ -13,6 +13,9 @@ class Settings(BaseSettings):
 
     x_client_id: str = ""
     x_client_secret: str = ""
+    x_user_id: str = ""
+    x_access_token: str = ""
+    x_refresh_token: str = ""
 
     opds_basic_auth_user: str = ""
     opds_basic_auth_password: str = ""

@@ -41,3 +41,17 @@ uv run python scripts/build_issue.py --section technology --days 7
 Writes an `.epub` to `output/`, fetching Guardian articles and running them
 straight through the ePub builder (no DB persistence or classification yet —
 that comes in later phases).
+
+### X bookmarks connector setup
+
+Once you have X API credits and an OAuth 2.0 app registered at
+https://developer.x.com/ (redirect URI `http://127.0.0.1:8080/callback`),
+set `X_CLIENT_ID` (and `X_CLIENT_SECRET` if your app is "confidential") in
+`.env`, then run:
+
+```bash
+uv run python scripts/x_oauth_setup.py
+```
+
+Follow the printed instructions and paste the resulting `X_ACCESS_TOKEN`,
+`X_REFRESH_TOKEN`, and `X_USER_ID` into `.env`.

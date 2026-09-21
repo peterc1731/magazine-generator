@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0">
+  <channel>
+    <title>BBC News</title>
+    <link>https://www.bbc.co.uk/news</link>
+    <description>BBC News sample feed</description>
+    <item>
+      <title>First BBC Headline (feed snippet)</title>
+      <link>https://www.bbc.co.uk/news/articles/first-story</link>
+      <guid>https://www.bbc.co.uk/news/articles/first-story</guid>
+      <pubDate>Fri, 18 Sep 2026 09:00:00 GMT</pubDate>
+    </item>
+    <item>
+      <title>Second BBC Headline (feed snippet)</title>
+      <link>https://www.bbc.co.uk/news/articles/second-story</link>
+      <guid>https://www.bbc.co.uk/news/articles/second-story</guid>
+      <pubDate>Sun, 20 Sep 2026 11:30:00 GMT</pubDate>
+    </item>
+  </channel>
+</rss>
