@@ -8,6 +8,8 @@ dependencies = [
     "fastapi>=0.115",
     "uvicorn[standard]>=0.30",
     "pydantic-settings>=2.4",
+    "sqlalchemy>=2.0.54",
+    "alembic>=1.20.0",
 ]
 
 [dependency-groups]
@@ -21,6 +23,7 @@ dev = [
 [tool.ruff]
 line-length = 100
 target-version = "py311"
+extend-exclude = ["alembic/versions"]
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "UP", "B"]

@@ -18,9 +18,10 @@ working headlessly before building the web UI on top of it.
 - [x] CI: basic lint + test run on push — `.github/workflows/ci.yml` (uv sync, ruff check, pytest)
 
 ## Phase 1 — Data Layer
-- [ ] SQLAlchemy models for `sources`, `articles`, `issues`, `issue_articles`, `job_runs`, `settings` (Architecture §4)
-- [ ] Migrations setup (Alembic)
-- [ ] Seed/fixture data for local dev
+- [x] SQLAlchemy models for `sources`, `articles`, `issues`, `issue_articles`, `job_runs`, `settings` (Architecture §4) — `app/models.py`
+- [x] Migrations setup (Alembic) — `alembic/`, initial migration generated and verified against a clean DB
+- [x] Seed/fixture data for local dev — `scripts/seed_dev_data.py` (idempotent, seeds the 5 PRD §6 sources)
+- [x] Model unit tests — `tests/test_models.py`, `tests/conftest.py` (in-memory SQLite `db_session` fixture, per `TESTING.md` §2.1)
 
 ## Phase 2 — First End-to-End Slice (single source)
 Goal: prove fetch → extract → ePub works before adding every source.
