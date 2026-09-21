@@ -58,3 +58,23 @@ def test_apply_classification_results_ignores_unknown_article_id(db_session: Ses
     results = [ClassificationResult(id="does-not-exist", relevance_score=9.0, section="Tech")]
 
     apply_classification_results(db_session, results, threshold=5.0)  # should not raise
+
+
+def test_apply_classification_results_duplicate_is_excluded_even_above_threshold(
+    db_session: Session,
+) -> None:
+    canonical = _make_article(db_session, "4a")
+    duplicate = _make_article(db_session, "4b")
+    results = [
+        ClassificationResult(id=canonical.id, relevance_score=9.0, section="World News"),
+        ClassificationResult(
+            id=duplicate.id, relevance_score=9.0, section="World News", duplicate_of=canonical.id
+        ),
+    ]
+
+    apply_classification_results(db_session, results, threshold=5.0)
+
+    db_session.refresh(canonical)
+    db_session.refresh(duplicate)
+    assert canonical.status == ArticleStatus.INCLUDED
+    assert duplicate.status == ArticleStatus.EXCLUDED

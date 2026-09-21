@@ -61,8 +61,7 @@ management, schedule control, and issue history on top of the same database.
 | Guardian content | Guardian Open Platform API (free tier) | Structured, clean article bodies — no scraping needed |
 | Newsletter content | Scrape each newsletter's public issue archive page (trafilatura on each issue URL) | Neither Dense Discovery nor bytes.dev publish RSS, but both publish every past issue on their site — no email infra needed |
 | X bookmarks | X API v2 Bookmarks endpoint (`GET /2/users/:id/bookmarks`), OAuth 2.0 user-context + PKCE | One-time OAuth flow, refresh token stored; pay-per-use pricing, no free tier — cheap at personal volume (see §5.4) |
-| Dedup/similarity | Embeddings (e.g. `voyage-3-lite` or similar) + cosine similarity clustering | Avoid classifying near-duplicate stories separately |
-| Classification | Claude API, batched prompts (Haiku for bulk scoring) | Cheap, fast relevance scoring against a free-text interest profile |
+| Classification + dedup | Claude API, batched prompts (`claude-haiku-4-5` for bulk scoring) | One batched call scores relevance and flags duplicate stories — no separate embeddings vendor/dependency |
 | ePub generation | `ebooklib` (+ Pillow for cover generation) | Full control over chapters/sections/nav/metadata, unlike Pandoc |
 | OPDS serving | Hand-rolled Atom/OPDS routes in FastAPI, **or** feed epubs into a Calibre library and use `calibre-server` | Calibre shortcut avoids writing/maintaining OPDS XML by hand |
 | Database | SQLite via SQLAlchemy | Single user, weekly writes — no need for Postgres |
@@ -122,17 +121,22 @@ source, canonical_url, cleaned_html, plaintext, images[]):
    hash, for caching and reprocessing.
 
 ### 3.5 Classification Pipeline
-1. **Dedup**: embed each article's title+summary, cluster near-duplicates
-   (cosine similarity above a threshold), keep the best/most complete
-   version per cluster (or merge later as a nice-to-have).
-2. **Scoring**: batch N articles into a single Claude prompt alongside the
-   user's interest profile; ask for a relevance score (0-10), a
-   include/exclude recommendation, and a section/category label per
-   article. Batching keeps token cost down vs. one call per article.
-3. **Selection**: articles above the configurable relevance threshold are
-   marked `included`; the rest are marked `excluded` but retained in the DB
-   for visibility in the UI.
-4. **Grouping**: included articles are grouped by the assigned section for
+1. **Scoring + dedup**: batch N articles (ordered by source preference) into
+   a single Claude prompt alongside the user's interest profile; ask for a
+   relevance score (0-10), a section/category label, and a `duplicate_of`
+   field per article — set on a later article when it covers the same story
+   as an earlier one in the batch. Dedup rides along on this same call
+   rather than being a separate embeddings/clustering step: it avoids a new
+   vendor dependency, and an LLM judgment call handles "same story,
+   different headline wording" across outlets at least as well as cosine
+   similarity on embeddings would, at this batch's scale (tens of articles
+   a week). Batching all articles into one call (instead of one call per
+   article) keeps token cost down.
+2. **Selection**: articles above the configurable relevance threshold are
+   marked `included`; anything flagged `duplicate_of` another article is
+   always `excluded`, regardless of its own score. The rest are marked
+   `excluded` but retained in the DB for visibility in the UI.
+3. **Grouping**: included articles are grouped by the assigned section for
    the issue's table of contents/chapter order.
 
 ### 3.6 ePub Builder

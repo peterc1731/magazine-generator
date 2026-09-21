@@ -8,15 +8,24 @@ CLASSIFICATION_MODEL = "claude-haiku-4-5"
 
 SYSTEM_PROMPT = """You are helping curate a personal weekly reading digest.
 Given the reader's stated interests and a batch of candidate articles, score
-each article's relevance to those interests and assign it a section.
+each article's relevance to those interests, assign it a section, and flag
+duplicate coverage.
 
 Respond with ONLY a JSON array (no prose, no markdown fences), one object per
 article, in this exact shape:
-[{"id": "<id>", "relevance_score": <0-10 number>, "section": "<short section name>"}]
+[{"id": "<id>", "relevance_score": <0-10 number>, "section": "<short section name>",
+  "duplicate_of": "<id or null>"}]
 
 Score higher for topics closely matching the reader's stated interests, lower
 for tangential or unrelated topics. Keep section names short and consistent
-across articles in the same batch (e.g. "Tech", "World News", "Culture")."""
+across articles in the same batch (e.g. "Tech", "World News", "Culture").
+
+Articles are listed in source-preference order. When two or more articles in
+this batch cover the same underlying story (e.g. the same news event reported
+by different outlets), set "duplicate_of" on every LATER one to the "id" of
+the FIRST one in the list covering that story, so only the earliest is kept.
+Set "duplicate_of" to null for anything that isn't a duplicate of an earlier
+article in this batch."""
 
 
 @dataclass
@@ -31,6 +40,7 @@ class ClassificationResult:
     id: str
     relevance_score: float
     section: str
+    duplicate_of: str | None = None
 
 
 class _MessagesClient(Protocol):
@@ -47,9 +57,15 @@ def classify_articles(
     articles: list[ClassificationInput],
     model: str = CLASSIFICATION_MODEL,
 ) -> list[ClassificationResult]:
-    """Batches all articles into a single Claude call for relevance scoring +
-    section tagging (ARCHITECTURE.md §3.5). One call per run's worth of
-    candidates, not one per article, to keep token cost down.
+    """Batches all articles into a single Claude call for relevance scoring,
+    section tagging, and duplicate-story detection (ARCHITECTURE.md §3.5).
+    One call per run's worth of candidates, not one per article, to keep
+    token cost down — this also means dedup piggybacks on a call already
+    being made rather than needing a separate embeddings step/provider.
+
+    `articles` should be ordered by source preference: when the model finds
+    two articles covering the same story, it's told to flag the later one as
+    a duplicate of the earlier one, so put your preferred sources first.
     """
     if not articles:
         return []
@@ -83,13 +99,18 @@ def _parse_response(text: str, expected_ids: set[str]) -> list[ClassificationRes
 
     results = []
     for entry in data:
-        if entry.get("id") not in expected_ids:
+        entry_id = entry.get("id")
+        if entry_id not in expected_ids:
             continue
+        duplicate_of = entry.get("duplicate_of")
+        if duplicate_of not in expected_ids or duplicate_of == entry_id:
+            duplicate_of = None
         results.append(
             ClassificationResult(
-                id=entry["id"],
+                id=entry_id,
                 relevance_score=float(entry["relevance_score"]),
                 section=entry.get("section") or "Uncategorized",
+                duplicate_of=duplicate_of,
             )
         )
     return results
