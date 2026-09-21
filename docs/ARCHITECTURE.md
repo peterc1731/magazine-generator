@@ -249,8 +249,9 @@ bookmarks added since the last run's cursor, using the official
 ## 6. Scheduling Design
 
 `settings.cron_expression` (default weekly) is read by the APScheduler
-process at startup and on every edit (the web app calls a "reschedule"
-endpoint on the worker, or the worker polls for changes). Each firing:
+process at startup (`app/worker.py`). A schedule change made from the future
+web UI takes effect on the next worker restart — a live-reschedule endpoint
+that picks up an edit without restarting is deferred to Phase 8. Each firing:
 1. Creates a `job_runs` row (`status=running`).
 2. Runs connectors → extraction → classification → ePub build → publish,
    in sequence, with per-stage error isolation (one broken source shouldn't

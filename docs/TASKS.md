@@ -51,11 +51,16 @@ Goal: prove fetch → extract → ePub works before adding every source.
 - [x] Image re-hosting: download and embed images referenced in cleaned content — `_rehost_images`: downloads each `<img>`'s bytes, adds them to the epub manifest, rewrites `src` to the local file; an image that fails to fetch or isn't a recognized image type is dropped rather than left as a dangling remote link. This closes the gap found during the real Guardian API run in Phase 2.
 
 ## Phase 6 — Job Orchestration
-- [ ] APScheduler worker process, cron expression read from `settings`
-- [ ] `job_runs` tracking (status, timings, counts, errors) around the full pipeline
-- [ ] Per-stage error isolation (one broken source shouldn't kill the run)
-- [ ] Manual "run now" trigger (callable independent of the schedule)
-- [ ] Failure notification (ntfy.sh or email)
+- [x] The actual pipeline wiring (not previously its own bullet, but needed to make the rest of this phase meaningful): `pipeline/orchestrator.py` — `run_pipeline()` fetches every enabled source, ingests new items (`pipeline/ingest.py`, dedup via the `(source_id, content_hash)` constraint from Phase 1, cleaned HTML written to disk via `pipeline/storage.py`), classifies all PENDING articles in one batch, and builds an ePub from newly-INCLUDED articles not already linked to a past issue. `pipeline/connector_factory.py` builds the right connector per `Source` row, pulling account-level secrets from settings rather than `source.config`.
+- [x] APScheduler worker process, cron expression read from `settings` — `app/worker.py` (`build_scheduler`/`run_worker`), cron expression via `pipeline/settings_store.get_cron_expression`. Note: schedule changes require a worker restart to take effect — a live-reschedule endpoint is deferred to Phase 8 (web UI).
+- [x] `job_runs` tracking (status, timings, counts, errors) around the full pipeline — `run_pipeline()` creates the row up front and finalizes status/counts/`error_summary` at the end
+- [x] Per-stage error isolation (one broken source shouldn't kill the run) — verified with a real integration test (one working + one unmocked/broken RSS source in the same run: the broken one's error lands in `error_summary`, the working one's article still gets ingested/classified/published)
+- [x] Manual "run now" trigger (callable independent of the schedule) — `scripts/run_now.py`, same code path as the scheduled job (`app.worker.execute_run`)
+- [x] Failure notification (ntfy.sh or email) — `pipeline/notifications.py`, fires when a run fails or produces zero included articles (ARCHITECTURE.md §9)
+
+Found and fixed a real bug while writing this phase's tests: `app/db.py`'s engine/session are bound once at import time from whatever `DATABASE_URL` was active then, so monkeypatching the env var per-test silently didn't redirect it — a test run leaked a real `magazine.db` file into the repo root. Fixed by making `app/worker.py`'s functions accept an injectable `session_factory` (same DI pattern used everywhere else in this codebase) instead of importing `SessionLocal` directly; cleaned up the leaked file (gitignored, never committed).
+
+Verified end-to-end as a real script (not just library-level tests): ran `scripts/run_now.py` against a seeded `Source` row with the Guardian connector mocked and a fake Anthropic client, confirmed a real `job_runs` row, a real `Issue` row, and a valid, re-openable `.epub` with the right section grouping — the full CLI → worker → orchestrator → DB → ePub path, not simulated.
 
 ## Phase 7 — OPDS Server
 - [ ] Decide hand-rolled vs. Calibre-backed (Architecture §3.7) and spike the chosen approach

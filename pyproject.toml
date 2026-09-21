@@ -17,6 +17,7 @@ dependencies = [
     "beautifulsoup4>=4.15.0",
     "anthropic>=1.7.0",
     "pillow>=12.3.0",
+    "apscheduler>=3.11.3",
 ]
 
 [dependency-groups]

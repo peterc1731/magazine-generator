@@ -20,6 +20,10 @@ class Settings(BaseSettings):
     opds_basic_auth_user: str = ""
     opds_basic_auth_password: str = ""
 
+    data_dir: str = "./data"
+    issues_dir: str = "./output"
+    ntfy_topic: str = ""
+
 
 @lru_cache
 def get_settings() -> Settings:

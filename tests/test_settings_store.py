@@ -1,9 +1,12 @@
 from sqlalchemy.orm import Session
 
 from pipeline.settings_store import (
+    DEFAULT_CRON_EXPRESSION,
     DEFAULT_RELEVANCE_THRESHOLD,
+    get_cron_expression,
     get_interest_profile,
     get_relevance_threshold,
+    set_cron_expression,
     set_interest_profile,
     set_relevance_threshold,
 )
@@ -34,3 +37,13 @@ def test_relevance_threshold_roundtrip(db_session: Session) -> None:
     set_relevance_threshold(db_session, 7.5)
 
     assert get_relevance_threshold(db_session) == 7.5
+
+
+def test_cron_expression_defaults(db_session: Session) -> None:
+    assert get_cron_expression(db_session) == DEFAULT_CRON_EXPRESSION
+
+
+def test_cron_expression_roundtrip(db_session: Session) -> None:
+    set_cron_expression(db_session, "0 6 * * *")
+
+    assert get_cron_expression(db_session) == "0 6 * * *"

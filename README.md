@@ -55,3 +55,22 @@ uv run python scripts/x_oauth_setup.py
 
 Follow the printed instructions and paste the resulting `X_ACCESS_TOKEN`,
 `X_REFRESH_TOKEN`, and `X_USER_ID` into `.env`.
+
+### Running the real pipeline
+
+Requires `ANTHROPIC_API_KEY` in `.env`, plus at least one enabled `Source`
+(the seed script above adds the sources from `docs/PRD.md` §6).
+
+```bash
+uv run python scripts/run_now.py     # one manual run, independent of the schedule
+uv run python -m app.worker          # standalone scheduler process (blocks; Ctrl-C to stop)
+```
+
+Both run the same pipeline (`pipeline/orchestrator.run_pipeline`): fetch
+every enabled source, classify/dedup pending articles against the interest
+profile (`pipeline/settings_store`), and build an `.epub` in `ISSUES_DIR`
+from whatever's newly included. Check the `job_runs` table for status/counts
+/errors from the last run. The schedule itself is a cron expression stored
+in `settings` (`pipeline.settings_store.get_cron_expression`, default weekly
+Monday 08:00) — edit it directly in the DB until the web UI (Phase 8) exists,
+and restart the worker to pick up a change.
