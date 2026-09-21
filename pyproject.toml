@@ -15,6 +15,7 @@ dependencies = [
     "ebooklib>=0.20",
     "feedparser>=6.0.14",
     "beautifulsoup4>=4.15.0",
+    "anthropic>=1.7.0",
 ]
 
 [dependency-groups]

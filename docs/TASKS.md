@@ -29,7 +29,7 @@ Goal: prove fetch → extract → ePub works before adding every source.
 - [x] `GuardianAPIConnector` (simplest source — structured content, no extraction needed) — Architecture §5.2 — `connectors/guardian.py`, tested against a recorded fixture response with `respx`
 - [x] Extraction pipeline wrapper around trafilatura, `Article` normalization — Architecture §3.4 — `pipeline/extraction.py`, tested against a saved HTML fixture (boilerplate stripped, metadata extracted)
 - [x] Minimal ePub builder with ebooklib: one chapter per article, no sections/cover yet — Architecture §3.6 — `pipeline/epub_builder.py`
-- [x] Manual script/CLI to run the slice end-to-end and produce a real `.epub` file to sanity-check on the e-reader — `scripts/build_issue.py`; wiring smoke-tested against a mocked Guardian API, produces a valid, re-openable ePub. **Still needs a real `GUARDIAN_API_KEY` run and an actual e-reader sideload check** — not done in this environment.
+- [x] Manual script/CLI to run the slice end-to-end and produce a real `.epub` file to sanity-check on the e-reader — `scripts/build_issue.py`. **Verified with a real `GUARDIAN_API_KEY` run** (user ran it locally after this environment's egress policy blocked the live Guardian API): produced a readable `.epub` with real articles, opened correctly. One follow-up found: articles have no images — `pipeline/epub_builder.py` doesn't embed images yet, so any `<img>` tags from Guardian's article HTML point at remote URLs an offline e-reader can't fetch. This is exactly the Phase 5 "image re-hosting" task below, not a bug in Phase 2.
 
 ## Phase 3 — Remaining Source Connectors
 - [x] `RSSConnector` for BBC News, incl. full-article fetch through the extraction pipeline — Architecture §5.1 — `connectors/rss.py`, tested against a recorded feed + two article-page fixtures
@@ -39,10 +39,10 @@ Goal: prove fetch → extract → ePub works before adding every source.
 - [ ] Set up X developer account/credits, do a small live test call before wiring into the pipeline — **requires the user's own X developer account/credits; not something this environment can do.**
 
 ## Phase 4 — Curation & Classification
-- [ ] Interest profile storage + a way to edit it (can be a raw settings row before the UI exists)
-- [ ] Dedup: embeddings + similarity clustering across articles from different sources
-- [ ] Claude batch classification: relevance scoring + section/category tagging against the interest profile — Architecture §3.5
-- [ ] Inclusion threshold config + article status tracking (`pending`/`included`/`excluded`)
+- [x] Interest profile storage + a way to edit it (can be a raw settings row before the UI exists) — `pipeline/settings_store.py`, backed by the `settings` table (also stores the relevance threshold)
+- [x] Dedup: embeddings + similarity clustering across articles from different sources — `pipeline/dedup.py` (cosine similarity + greedy clustering, tested with synthetic vectors). **The embedding provider itself isn't wired up**: Anthropic has no first-party embeddings endpoint, and Voyage AI's current SDK/model name wasn't verified against live docs in this environment — `EmbeddingProvider` is a documented `Protocol` a real provider plugs into later, not a guessed implementation.
+- [x] Claude batch classification: relevance scoring + section/category tagging against the interest profile — Architecture §3.5 — `pipeline/classification.py`, model `claude-haiku-4-5`, one batched call per run. Tested against a fake client (no live Anthropic calls in the test suite — that's the drift-suite's job later).
+- [x] Inclusion threshold config + article status tracking (`pending`/`included`/`excluded`) — `pipeline/curation.py`, threshold from `settings_store`
 
 ## Phase 5 — Full ePub Generation
 - [ ] Section-grouped table of contents / chapter ordering
