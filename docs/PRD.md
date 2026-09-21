@@ -48,11 +48,11 @@ catalogs with HTTP basic auth.
 
 | Source | Type | Notes |
 |---|---|---|
-| Dense Discovery | Email newsletter | Check for a public RSS/web-archive feed first |
-| bytes.dev | Email newsletter | Check for a public RSS/web-archive feed first |
+| Dense Discovery | Web archive scrape | No RSS feed; all past issues are published on the site — scrape the issue archive/index page |
+| bytes.dev | Web archive scrape | No RSS feed; all past issues are published on the site — scrape the issue archive/index page |
 | BBC News | RSS + web scrape | Full article body not in RSS, needs extraction |
 | The Guardian | API | Use the free Guardian Open Platform API for clean article bodies |
-| X (personal feed) | Bookmarks | User bookmarks threads/articles on X; scraper pulls bookmarks added since the last issue (see §9) |
+| X (personal feed) | Bookmarks (X API v2) | User bookmarks threads/articles on X; scraper pulls bookmarks added since the last issue via the official Bookmarks API (OAuth 2.0 user-context, pay-per-use pricing — see Architecture doc §5.4) |
 
 Sources must be pluggable — the user should be able to add/remove/pause
 sources from the web UI without a code change for common source types
@@ -120,20 +120,39 @@ sources from the web UI without a code change for common source types
 - Adding a new RSS-based or API-based source takes configuration only, no
   code changes.
 
-## 9. Open Questions / Risks
+## 9. Source Access — Resolved
 
-- **X bookmarks ingestion**: requires OAuth user-context access to the
-  bookmarks endpoint, which depends on current X API access tier/pricing —
-  needs a small validation spike before being treated as "done" (see
-  Architecture doc §5.4).
-- **Newsletter access**: assumes Dense Discovery/bytes.dev have or will have
-  a usable web archive/RSS; if not, falls back to inbound email parsing,
-  which is more infrastructure (dedicated inbound address, webhook parsing).
-- **Paywalls**: BBC/Guardian are assumed accessible; any future source behind
-  a hard paywall is out of scope unless the user has a personal
+Both open questions from the initial draft have been resolved:
+
+- **X bookmarks ingestion**: uses the official X API v2 Bookmarks endpoint
+  (`GET /2/users/:id/bookmarks`), authorized via a one-time OAuth 2.0 +
+  PKCE user-context flow. As of Feb 2026, X moved to pay-per-use pricing
+  with no free tier and no monthly minimum — at personal, weekly-digest
+  volume (tens of bookmarks a week) this costs a few dollars a month, not
+  the $100s/month legacy tier pricing originally assumed. Full details in
+  Architecture doc §5.4.
+- **Newsletter access**: neither Dense Discovery nor bytes.dev publish an
+  RSS feed, but both publish every past issue on their website. The
+  connector scrapes each newsletter's issue archive/index page for new
+  issue URLs since the last run and extracts the issue page content
+  directly — no email ingestion infrastructure needed for MVP. Full
+  details in Architecture doc §5.3.
+
+## 10. Remaining Risks
+
+- **Paywalls**: BBC/Guardian are assumed accessible; any future source
+  behind a hard paywall is out of scope unless the user has a personal
   subscription/cookie to use.
+- **Archive page structure**: Dense Discovery's and bytes.dev's exact
+  archive URL pattern/pagination need to be confirmed against the live
+  site during implementation (see Architecture doc §5.3) — the scraping
+  approach is sound, but site-specific selectors aren't finalized yet.
+- **X API pricing/policy drift**: pay-per-use pricing and endpoint access
+  rules have changed more than once in the past; the low weekly volume
+  here should stay cheap, but worth a quick pricing sanity-check
+  periodically rather than assuming it never changes.
 
-## 10. Post-MVP / Nice-to-Have Extensions
+## 11. Post-MVP / Nice-to-Have Extensions
 
 - **Feedback loop**: thumbs up/down on articles in the web UI that nudges
   the interest profile/classification weights over time instead of relying

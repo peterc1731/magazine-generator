@@ -59,8 +59,8 @@ management, schedule control, and issue history on top of the same database.
 | Scheduling | APScheduler, persistent job store in SQLite | Weekly cadence doesn't need Celery/Redis; survives restarts, schedule editable from DB |
 | Extraction | `trafilatura` (primary), Playwright + readability.js (fallback for JS-rendered pages) | Best-maintained boilerplate-removal + metadata library available |
 | Guardian content | Guardian Open Platform API (free tier) | Structured, clean article bodies — no scraping needed |
-| Newsletter content | RSS/web-archive if published; otherwise inbound email via Cloudflare Email Routing/Mailgun → webhook → BeautifulSoup parse | Prefer RSS path; email path only as fallback |
-| X bookmarks | X API v2 bookmarks endpoint, OAuth 2.0 user-context | Needs one-time OAuth flow (see §5.4) |
+| Newsletter content | Scrape each newsletter's public issue archive page (trafilatura on each issue URL) | Neither Dense Discovery nor bytes.dev publish RSS, but both publish every past issue on their site — no email infra needed |
+| X bookmarks | X API v2 Bookmarks endpoint (`GET /2/users/:id/bookmarks`), OAuth 2.0 user-context + PKCE | One-time OAuth flow, refresh token stored; pay-per-use pricing, no free tier — cheap at personal volume (see §5.4) |
 | Dedup/similarity | Embeddings (e.g. `voyage-3-lite` or similar) + cosine similarity clustering | Avoid classifying near-duplicate stories separately |
 | Classification | Claude API, batched prompts (Haiku for bulk scoring) | Cheap, fast relevance scoring against a free-text interest profile |
 | ePub generation | `ebooklib` (+ Pillow for cover generation) | Full control over chapters/sections/nav/metadata, unlike Pandoc |
@@ -100,11 +100,11 @@ API JSON payload, email MIME body, bookmark tweet ID/URL) plus enough to
 resume from (`cursor` — e.g. last-seen timestamp, last bookmark ID, RSS
 `etag`/`Last-Modified`). Connector types for MVP:
 
-- **RSSConnector** — generic, config = feed URL. Used for BBC and any
-  newsletter that publishes a feed.
+- **RSSConnector** — generic, config = feed URL. Used for BBC.
 - **GuardianAPIConnector** — config = API key + section/query filters.
-- **EmailConnector** — polls a webhook-fed inbox table populated by the
-  inbound email provider; config = expected sender address(es).
+- **WebArchiveConnector** — generic, config = archive/index page URL +
+  a site-specific rule for extracting issue links and their dates/numbers
+  from that page. Used for Dense Discovery and bytes.dev (see §5.3).
 - **XBookmarksConnector** — see §5.4.
 
 ### 3.4 Extraction Pipeline
@@ -188,30 +188,59 @@ Query by section/tag, request `show-fields=body,byline,thumbnail`. Response
 is already clean HTML — extraction step is skipped for this connector.
 
 ### 5.3 Newsletters (Dense Discovery, bytes.dev)
-Spike first: check each for a public web archive or RSS feed of past
-issues. If present, treat as an `RSSConnector` and run full extraction on
-the archived issue page. If absent, use `EmailConnector`:
-- Dedicated inbound address via Cloudflare Email Routing (or Mailgun/
-  Postmark inbound parsing) forwarding to a webhook on the web app.
-- Webhook stores the raw MIME message; a parser extracts the HTML body,
-  strips tracking pixels/unsubscribe footers/social icons, and produces a
-  cleaned `Article` directly (no trafilatura needed — the email IS the
-  content).
+Confirmed: neither publishes an RSS feed, but both publish every past
+issue on their website (an issue archive/index page). No email-ingestion
+infrastructure is needed for MVP — use a `WebArchiveConnector`:
+- `fetch_since(cursor)` loads the archive/index page, lists issue links
+  (and whatever date/number is exposed alongside each), and returns only
+  issues newer than the cursor (last-seen issue URL or date).
+- Each new issue's own page is then run through the standard extraction
+  pipeline (§3.4, trafilatura) like any other web article — an issue page
+  is just an article-shaped HTML page once ads/nav are stripped.
+- The exact archive URL and pagination pattern differ per site and aren't
+  nailed down yet — confirming those (and whether the archive page lists
+  every issue or needs pagination through older ones) is a small
+  implementation task, not an open design question: the connector
+  contract above holds regardless of the site-specific selector details.
+- `cursor` = the last-seen issue URL or published date per source, stored
+  in `sources.last_cursor`.
 
 ### 5.4 X Bookmarks
 User bookmarks threads/articles on X during the week; the connector pulls
-bookmarks added since the last run's cursor.
-- Requires the X API v2 `GET /2/users/:id/bookmarks` endpoint, which needs
-  **OAuth 2.0 user-context** authorization (not an app-only bearer token) —
-  a one-time OAuth flow where the user authorizes the app, with the
-  resulting refresh token stored securely and refreshed automatically.
-- API access tier requirements for this endpoint should be re-verified at
-  implementation time (pricing/tier gating has changed repeatedly); treat
-  this as a short validation spike before committing to the approach in
-  the MVP.
-- Cursor = last-seen bookmark ID; each new bookmark's tweet/thread URL is
-  fetched and run through standard extraction (thread text pulled via the
-  API response itself rather than scraping x.com).
+bookmarks added since the last run's cursor, using the official
+[X API v2 Bookmarks endpoints](https://docs.x.com/x-api/posts/bookmarks/introduction).
+
+- **Endpoint**: `GET /2/users/:id/bookmarks`, paginated via `max_results`
+  (cap 100) and `pagination_token` from the previous page's
+  `meta.next_token`. Bookmarks are returned newest-first, scoped to the
+  authenticated user only (there's no way to read anyone else's
+  bookmarks, which matches the intended use exactly).
+- **Auth**: requires **OAuth 2.0 user-context with PKCE** — an app-only
+  bearer token is not sufficient. One-time authorization flow where the
+  user logs in and grants the app scopes; the resulting access + refresh
+  token pair is stored (refresh token used to mint new access tokens
+  automatically, via the `offline.access` scope).
+- **Scopes needed**: `tweet.read`, `users.read`, `bookmark.read`,
+  `offline.access`.
+- **Pricing**: as of Feb 2026 X retired tiered plans (Free/Basic/Pro) for
+  new developers in favor of **pay-per-use credits** — no free tier, but
+  also no monthly minimum/subscription. Reads are billed per call (on the
+  order of $0.005/post read, $0.010/user read at time of writing; verify
+  current rates in the X developer console before enabling billing).
+  At this project's volume — a weekly check of a personal bookmarks list,
+  likely tens of items — cost should land in the low single-digit
+  dollars/month, not the $100s/month a legacy Basic-tier subscription
+  would have implied. Credits must be purchased upfront in the developer
+  portal before the first call.
+- **Cursor**: last-seen bookmark ID; each new bookmark's post/thread
+  content comes back directly in the API response (text, author, media),
+  so no separate scrape of x.com is needed. If a bookmarked post links out
+  to an external article, that URL is run through the standard extraction
+  pipeline (§3.4) like any other web link.
+- **Practical note**: pricing and access rules for this API have shifted
+  more than once; treat the numbers above as directional and re-check the
+  X developer console at implementation time rather than hardcoding this
+  doc's figures into billing assumptions.
 
 ## 6. Scheduling Design
 
@@ -259,10 +288,16 @@ using object storage instead of local disk), Calibre library directory.
 
 ## 10. Open Technical Risks
 
-- X bookmarks API access tier/auth requirements (§5.4) — validate before
-  building the connector.
-- Newsletter RSS availability (§5.3) — validate before deciding whether the
-  email-ingestion path is needed for MVP.
+Source access for all five initial sources is now resolved (§5.1-§5.4).
+Remaining risks are implementation details rather than open design
+questions:
+
+- Dense Discovery's and bytes.dev's exact archive URL/pagination pattern
+  need confirming against the live site when the `WebArchiveConnector` is
+  built (§5.3).
+- X API pay-per-use pricing/access rules have shifted before and may again
+  — re-check current rates before enabling billing on the developer
+  account (§5.4).
 - JS-rendered pages requiring the Playwright fallback add latency/resource
   cost to the weekly run — worth capping per-source fetch time so one slow
   source doesn't block the whole issue.
