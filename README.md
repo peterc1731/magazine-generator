@@ -29,3 +29,15 @@ After changing `app/models.py`, generate a migration with:
 ```bash
 uv run alembic revision --autogenerate -m "describe the change"
 ```
+
+### Build a real issue (Phase 2 end-to-end slice)
+
+Requires `GUARDIAN_API_KEY` in `.env` (free key: https://open-platform.theguardian.com/access/).
+
+```bash
+uv run python scripts/build_issue.py --section technology --days 7
+```
+
+Writes an `.epub` to `output/`, fetching Guardian articles and running them
+straight through the ePub builder (no DB persistence or classification yet —
+that comes in later phases).

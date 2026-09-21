@@ -1,0 +1,42 @@
+{
+  "response": {
+    "status": "ok",
+    "userTier": "developer",
+    "total": 2,
+    "startIndex": 1,
+    "pageSize": 20,
+    "currentPage": 1,
+    "pages": 1,
+    "orderBy": "oldest",
+    "results": [
+      {
+        "id": "technology/2026/sep/18/first-example-slug",
+        "type": "article",
+        "sectionId": "technology",
+        "sectionName": "Technology",
+        "webPublicationDate": "2026-09-18T09:00:00Z",
+        "webTitle": "First example headline",
+        "webUrl": "https://www.theguardian.com/technology/2026/sep/18/first-example-slug",
+        "apiUrl": "https://content.guardianapis.com/technology/2026/sep/18/first-example-slug",
+        "fields": {
+          "byline": "Alex Reporter",
+          "body": "<p>Body of the first example article.</p>"
+        }
+      },
+      {
+        "id": "technology/2026/sep/20/second-example-slug",
+        "type": "article",
+        "sectionId": "technology",
+        "sectionName": "Technology",
+        "webPublicationDate": "2026-09-20T11:30:00Z",
+        "webTitle": "Second example headline",
+        "webUrl": "https://www.theguardian.com/technology/2026/sep/20/second-example-slug",
+        "apiUrl": "https://content.guardianapis.com/technology/2026/sep/20/second-example-slug",
+        "fields": {
+          "byline": "Sam Writer",
+          "body": "<p>Body of the second example article.</p>"
+        }
+      }
+    ]
+  }
+}

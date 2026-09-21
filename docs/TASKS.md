@@ -25,11 +25,11 @@ working headlessly before building the web UI on top of it.
 
 ## Phase 2 — First End-to-End Slice (single source)
 Goal: prove fetch → extract → ePub works before adding every source.
-- [ ] Source connector interface (`SourceConnector` protocol, `RawItem`, cursor handling) — Architecture §3.3
-- [ ] `GuardianAPIConnector` (simplest source — structured content, no extraction needed) — Architecture §5.2
-- [ ] Extraction pipeline wrapper around trafilatura, `Article` normalization — Architecture §3.4
-- [ ] Minimal ePub builder with ebooklib: one chapter per article, no sections/cover yet — Architecture §3.6
-- [ ] Manual script/CLI to run the slice end-to-end and produce a real `.epub` file to sanity-check on the e-reader
+- [x] Source connector interface (`SourceConnector` protocol, `RawItem`, `FetchResult`, cursor handling) — Architecture §3.3 — `connectors/base.py`
+- [x] `GuardianAPIConnector` (simplest source — structured content, no extraction needed) — Architecture §5.2 — `connectors/guardian.py`, tested against a recorded fixture response with `respx`
+- [x] Extraction pipeline wrapper around trafilatura, `Article` normalization — Architecture §3.4 — `pipeline/extraction.py`, tested against a saved HTML fixture (boilerplate stripped, metadata extracted)
+- [x] Minimal ePub builder with ebooklib: one chapter per article, no sections/cover yet — Architecture §3.6 — `pipeline/epub_builder.py`
+- [x] Manual script/CLI to run the slice end-to-end and produce a real `.epub` file to sanity-check on the e-reader — `scripts/build_issue.py`; wiring smoke-tested against a mocked Guardian API, produces a valid, re-openable ePub. **Still needs a real `GUARDIAN_API_KEY` run and an actual e-reader sideload check** — not done in this environment.
 
 ## Phase 3 — Remaining Source Connectors
 - [ ] `RSSConnector` for BBC News, incl. full-article fetch through the extraction pipeline — Architecture §5.1
