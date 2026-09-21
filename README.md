@@ -74,3 +74,18 @@ from whatever's newly included. Check the `job_runs` table for status/counts
 in `settings` (`pipeline.settings_store.get_cron_expression`, default weekly
 Monday 08:00) — edit it directly in the DB until the web UI (Phase 8) exists,
 and restart the worker to pick up a change.
+
+### OPDS catalog
+
+With the dev server running (`uv run uvicorn app.main:app --reload`), point
+an OPDS client (or `curl`) at:
+
+```
+GET /opds/               # catalog of generated issues, newest first
+GET /opds/issues/{id}/download
+GET /opds/issues/{id}/cover
+```
+
+Set `OPDS_BASIC_AUTH_USER`/`OPDS_BASIC_AUTH_PASSWORD` in `.env` to require
+basic auth (left open if both are blank). HTTPS is a deploy-time concern
+(Caddy, Phase 9) — the dev server here is plain HTTP.

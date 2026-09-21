@@ -121,6 +121,10 @@ def test_run_pipeline_classifies_and_publishes_ingested_article(db_session: Sess
     book = epub.read_epub(issue.file_ref)
     assert book.get_metadata("DC", "title")
 
+    assert issue.cover_ref is not None
+    assert Path(issue.cover_ref).exists()
+    assert Path(issue.cover_ref).read_bytes()  # non-empty
+
 
 @respx.mock
 def test_run_pipeline_isolates_broken_source_and_still_processes_others(

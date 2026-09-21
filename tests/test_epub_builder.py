@@ -67,12 +67,14 @@ def test_build_epub_includes_generated_cover_image(tmp_path: Path) -> None:
     articles = [EpubArticleInput(title="A", source_name="S", html_body="<p>body</p>")]
     output_path = tmp_path / "issue.epub"
 
-    build_epub(articles, issue_title="Test Issue", output_path=output_path)
+    returned_cover_bytes = build_epub(articles, issue_title="Test Issue", output_path=output_path)
 
     book = epub.read_epub(str(output_path))
     covers = [item for item in book.get_items() if item.get_type() == ebooklib.ITEM_COVER]
     assert len(covers) == 1
     assert covers[0].content  # non-empty image bytes
+    # The bytes returned to the caller are the same ones embedded in the epub.
+    assert returned_cover_bytes == covers[0].content
 
 
 def test_build_epub_groups_chapters_by_section_in_toc(tmp_path: Path) -> None:

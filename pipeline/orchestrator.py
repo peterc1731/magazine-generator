@@ -15,7 +15,7 @@ from pipeline.curation import apply_classification_results
 from pipeline.epub_builder import EpubArticleInput, build_epub
 from pipeline.ingest import ingest_raw_item
 from pipeline.settings_store import get_interest_profile, get_relevance_threshold
-from pipeline.storage import load_cleaned_html
+from pipeline.storage import load_cleaned_html, save_cover_image
 
 MAX_SUMMARY_CHARS = 1000
 
@@ -142,7 +142,7 @@ def _build_issue_from_included(
         ]
         issue_date = datetime.now(UTC).date()
         output_path = Path(settings.issues_dir) / f"issue-{issue_date.isoformat()}.epub"
-        build_epub(
+        cover_bytes = build_epub(
             epub_inputs, issue_title=f"Magazine — {issue_date.isoformat()}", output_path=output_path
         )
 
@@ -153,7 +153,8 @@ def _build_issue_from_included(
             size_bytes=output_path.stat().st_size,
         )
         db.add(issue)
-        db.flush()
+        db.flush()  # populates issue.id for the cover file name below
+        issue.cover_ref = save_cover_image(issue.id, cover_bytes)
         for order, article in enumerate(included):
             db.add(
                 IssueArticle(

@@ -16,3 +16,13 @@ def save_cleaned_html(article_id: str, html: str) -> str:
 
 def load_cleaned_html(ref: str) -> str:
     return Path(ref).read_text(encoding="utf-8")
+
+
+def save_cover_image(issue_id: str, image_bytes: bytes) -> str:
+    """Writes an issue's cover image to local disk and returns the path to
+    store as `Issue.cover_ref`, so the OPDS catalog can serve it without
+    re-opening the epub file."""
+    path = Path(get_settings().data_dir) / "covers" / f"{issue_id}.jpg"
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_bytes(image_bytes)
+    return str(path)

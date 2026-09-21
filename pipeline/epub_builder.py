@@ -39,7 +39,7 @@ def build_epub(
     issue_title: str,
     output_path: Path,
     client: httpx.Client | None = None,
-) -> None:
+) -> bytes:
     """Builds the ePub issue: chapters grouped into a nested, section-based
     TOC, a generated cover, and images downloaded and embedded in the epub
     rather than left as remote links an offline e-reader can't fetch
@@ -47,6 +47,10 @@ def build_epub(
 
     Articles are grouped under their `section` in the order sections first
     appear in `articles` — callers control section order via input order.
+
+    Returns the cover image bytes, so callers (the orchestrator) can persist
+    it separately as `Issue.cover_ref` for the OPDS catalog to serve without
+    re-opening the epub file just to pull the cover back out.
     """
     owns_client = client is None
     client = client or httpx.Client(timeout=10.0, follow_redirects=True)
@@ -57,7 +61,8 @@ def build_epub(
         book.set_identifier(f"magazine-generator-{datetime.utcnow().isoformat()}")
         book.set_title(issue_title)
         book.set_language("en")
-        book.set_cover("cover.jpg", _generate_cover_image(issue_title))
+        cover_bytes = _generate_cover_image(issue_title)
+        book.set_cover("cover.jpg", cover_bytes)
 
         sections: dict[str, list[epub.EpubHtml]] = {}
         for index, article in enumerate(articles):
@@ -80,6 +85,7 @@ def build_epub(
 
         output_path.parent.mkdir(parents=True, exist_ok=True)
         epub.write_epub(str(output_path), book)
+        return cover_bytes
     finally:
         if owns_client:
             client.close()

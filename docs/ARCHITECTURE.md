@@ -63,7 +63,7 @@ management, schedule control, and issue history on top of the same database.
 | X bookmarks | X API v2 Bookmarks endpoint (`GET /2/users/:id/bookmarks`), OAuth 2.0 user-context + PKCE | One-time OAuth flow, refresh token stored; pay-per-use pricing, no free tier — cheap at personal volume (see §5.4) |
 | Classification + dedup | Claude API, batched prompts (`claude-haiku-4-5` for bulk scoring) | One batched call scores relevance and flags duplicate stories — no separate embeddings vendor/dependency |
 | ePub generation | `ebooklib` (+ Pillow for cover generation) | Full control over chapters/sections/nav/metadata, unlike Pandoc |
-| OPDS serving | Hand-rolled Atom/OPDS routes in FastAPI, **or** feed epubs into a Calibre library and use `calibre-server` | Calibre shortcut avoids writing/maintaining OPDS XML by hand |
+| OPDS serving | Hand-rolled Atom/OPDS routes in FastAPI (`app/opds.py`) | Self-contained, testable with the same tools as the rest of the app; Calibre-backed remains an option to swap to later (§3.7) |
 | Database | SQLite via SQLAlchemy | Single user, weekly writes — no need for Postgres |
 | File storage | Local disk volume, optionally Cloudflare R2/Backblaze B2 | Cheap, simple; DB stores metadata + path/URL only |
 | Hosting | Single small VPS (Hetzner CX22 / DigitalOcean), Docker Compose | Always-on, cheap, full control; avoids serverless cold-start/storage complications |
@@ -159,6 +159,17 @@ Either:
 
 Recommendation: start with (b) to avoid hand-writing/maintaining OPDS XML;
 revisit (a) only if Calibre's catalog structure becomes limiting.
+
+**Decision (Phase 7): went with (a) hand-rolled instead**, not because (b)
+turned out limiting but because of where this got built — a sandboxed dev
+environment with no way to install or verify a system-level Calibre binary,
+where a self-contained, in-process FastAPI implementation is what's actually
+testable. `app/opds.py`: a hand-written OPDS 1.2 Atom catalog (`GET /opds/`)
+plus `download`/`cover` routes per issue, covered by FastAPI `TestClient`
+tests same as every other route in this codebase — no new system dependency,
+no new deployment shape. Calibre-backed remains a valid option to swap to in
+Phase 9 if the hand-rolled catalog proves limiting once it's actually used
+against a real e-reader.
 
 ### 3.8 Storage
 - **SQLite** tables (see §4) for all structured state.

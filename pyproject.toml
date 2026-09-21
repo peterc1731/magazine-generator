@@ -35,6 +35,9 @@ extend-exclude = ["alembic/versions"]
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "UP", "B"]
+# B008 (no function calls in argument defaults) is a false positive for
+# FastAPI's Depends(...) pattern, which is the framework's own idiom.
+ignore = ["B008"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

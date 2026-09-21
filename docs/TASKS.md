@@ -63,10 +63,10 @@ Found and fixed a real bug while writing this phase's tests: `app/db.py`'s engin
 Verified end-to-end as a real script (not just library-level tests): ran `scripts/run_now.py` against a seeded `Source` row with the Guardian connector mocked and a fake Anthropic client, confirmed a real `job_runs` row, a real `Issue` row, and a valid, re-openable `.epub` with the right section grouping — the full CLI → worker → orchestrator → DB → ePub path, not simulated.
 
 ## Phase 7 — OPDS Server
-- [ ] Decide hand-rolled vs. Calibre-backed (Architecture §3.7) and spike the chosen approach
-- [ ] Catalog listing generated issues with cover + acquisition link
-- [ ] HTTPS + basic auth in front of it
-- [ ] Validate against the actual e-reader's OPDS client
+- [x] Decide hand-rolled vs. Calibre-backed (Architecture §3.7) and spike the chosen approach — went hand-rolled; this dev environment can't install/verify a Calibre binary, and hand-rolled is fully testable with the same FastAPI `TestClient` tooling as the rest of the app. Calibre-backed remains an option for Phase 9 if the catalog proves limiting.
+- [x] Catalog listing generated issues with cover + acquisition link — `app/opds.py`: `GET /opds/` (OPDS 1.2 Atom acquisition feed, newest issue first), `GET /opds/issues/{id}/download` (the epub), `GET /opds/issues/{id}/cover`. Verified the generated feed is well-formed XML with the right namespaces/link `rel`s by parsing it back.
+- [x] HTTPS + basic auth in front of it — basic auth implemented in the app itself (`require_auth`, open access if unconfigured, matching how other optional settings behave); HTTPS termination is still Caddy's job at deploy time (Phase 9) — the app-level auth is defense in depth, not a replacement for that.
+- [ ] Validate against the actual e-reader's OPDS client — **needs the user's real e-reader once this is deployed somewhere reachable (Phase 9)**; not something this environment can do.
 
 ## Phase 8 — Web UI
 - [ ] Source management: list/add/edit/enable/disable, per-source config forms
