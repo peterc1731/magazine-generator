@@ -276,14 +276,17 @@ rather than waiting for the schedule.
 
 ## 7. Deployment
 
-Single VPS, Docker Compose with services:
-- `web` (FastAPI app)
-- `worker` (APScheduler process, same image different entrypoint)
-- `calibre-server` (if using the Calibre OPDS shortcut)
-- `caddy` (reverse proxy, HTTPS via Let's Encrypt, HTTP basic auth)
+Single VPS (Oracle Cloud's Always Free ARM tier, per Phase 9 — a real
+persistent VM suits this better than sleep-based PaaS free tiers), Docker
+Compose with services, all built from one image (`Dockerfile`):
+- `web` (FastAPI app — OPDS + UI)
+- `worker` (APScheduler process, same image, `command:` override)
+- `caddy` (reverse proxy, HTTPS via Let's Encrypt; app-level basic auth
+  handles access control, per §3.7's decision to skip Calibre)
 
-Volumes: SQLite DB file, file storage directory (or R2/B2 credentials if
-using object storage instead of local disk), Calibre library directory.
+Named volumes: `db` (SQLite file), `data` (cleaned article HTML + covers),
+`output` (generated epubs). Step-by-step provisioning instructions are in
+`README.md`'s "Deployment" section.
 
 ## 8. Security & Access
 

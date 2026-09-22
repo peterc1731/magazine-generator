@@ -1,0 +1,42 @@
+services:
+  web:
+    build: .
+    restart: unless-stopped
+    env_file: .env
+    volumes:
+      - db:/app/db
+      - data:/app/data
+      - output:/app/output
+    expose:
+      - "8000"
+
+  worker:
+    build: .
+    restart: unless-stopped
+    env_file: .env
+    command: ["python", "-m", "app.worker"]
+    volumes:
+      - db:/app/db
+      - data:/app/data
+      - output:/app/output
+
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    env_file: .env
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - web
+
+volumes:
+  db:
+  data:
+  output:
+  caddy_data:
+  caddy_config:

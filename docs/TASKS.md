@@ -99,11 +99,25 @@ browser (interactive HTMX behavior, responsive layout) — that needs a human
 with a browser, which this environment doesn't have.
 
 ## Phase 9 — Deployment
-- [ ] Dockerfiles for web/worker (+ Calibre server if used)
-- [ ] Docker Compose stack, volumes for DB/file storage/Calibre library
-- [ ] Caddy reverse proxy: HTTPS + basic auth
-- [ ] VPS provisioning (Hetzner/DigitalOcean), secrets management
-- [ ] First real scheduled run in production, confirm e-reader can pull the issue
+- [x] Dockerfile for web/worker (single image, different `command:` per service — Calibre was never adopted, see Phase 7) — root `Dockerfile`, includes `fonts-dejavu-core` (needed for the Phase 5 cover-image font fix) and `docker/entrypoint.sh` (runs `alembic upgrade head` before every container start, idempotent, so `web`/`worker` never race on schema state).
+- [x] Docker Compose stack, volumes for DB/file storage — `docker-compose.yml`: `web`, `worker`, `caddy` services; named volumes for `db`, `data`, `output`.
+- [x] Caddy reverse proxy: HTTPS + basic auth — `Caddyfile` (automatic Let's Encrypt via `{$DOMAIN}`); basic auth is already handled app-side (Phase 7/8), Caddy only does TLS termination here.
+- [ ] VPS provisioning (Oracle Cloud Always Free chosen over Hetzner/DigitalOcean — see chat history for why), secrets management — **written up as a step-by-step guide in README.md "Deployment" section; not run against real infrastructure.** This environment has no cloud account access.
+- [ ] First real scheduled run in production, confirm e-reader can pull the issue — **needs the above to exist first**, then the user's real e-reader; not something this environment can do.
+
+Verified what could actually be verified without a live Docker daemon or
+cloud account (neither available in this environment): `docker compose
+config` validates the Compose file's structure; and, since a wrong path here
+would have meant **silent data loss** the first time a container restarted,
+manually reproduced the exact runtime conditions the containers rely on —
+simulated the `/app` layout with `PYTHONPATH` to confirm imports resolve the
+way the Dockerfile assumes, and ran `alembic upgrade head` against an
+absolute SQLite path to confirm the volume-mount migration/persistence
+story is actually correct (SQLite does **not** create missing parent
+directories itself — this only works because Docker's named volumes
+guarantee the mount directory exists before the container's first command
+runs; the exact env var values in the README's deployment guide were
+derived from this test, not assumed).
 
 ## Phase 10 — Hardening
 - [ ] Tune classification threshold / interest profile against a few real weekly runs
