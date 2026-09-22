@@ -1,0 +1,23 @@
+<tr id="source-row-{{ source.id }}">
+  <td>{{ source.name }}</td>
+  <td>{{ source.type.value }}</td>
+  <td>
+    <span class="badge {{ 'badge-enabled' if source.enabled else 'badge-disabled' }}">
+      {{ 'enabled' if source.enabled else 'disabled' }}
+    </span>
+  </td>
+  <td class="muted">{{ source.last_cursor or '—' }}</td>
+  <td>
+    <a href="/ui/sources/{{ source.id }}/edit">edit</a>
+    &middot;
+    <button hx-post="/ui/sources/{{ source.id }}/toggle" hx-target="#source-row-{{ source.id }}"
+            hx-swap="outerHTML">
+      {{ 'disable' if source.enabled else 'enable' }}
+    </button>
+    &middot;
+    <button hx-post="/ui/sources/{{ source.id }}/test-fetch"
+            hx-target="#test-result-{{ source.id }}" hx-swap="innerHTML">
+      test fetch
+    </button>
+  </td>
+</tr>

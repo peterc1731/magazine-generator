@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block title %}Issues — Magazine Generator{% endblock %}
+{% block content %}
+<h1>Issues</h1>
+<table>
+  <tr><th></th><th>Date</th><th>Articles</th><th>Size</th><th></th></tr>
+  {% for issue in issues %}
+  <tr>
+    <td>
+      {% if issue.cover_ref %}
+      <img class="cover-thumb" src="/opds/issues/{{ issue.id }}/cover" alt="">
+      {% endif %}
+    </td>
+    <td>{{ issue.issue_date.strftime('%Y-%m-%d') }}</td>
+    <td>{{ issue.article_count }}</td>
+    <td>{% if issue.size_bytes %}{{ '%.1f'|format(issue.size_bytes / 1024) }} KB{% else %}—{% endif %}</td>
+    <td><a href="/opds/issues/{{ issue.id }}/download">download</a></td>
+  </tr>
+  {% else %}
+  <tr><td colspan="5" class="muted">No issues yet.</td></tr>
+  {% endfor %}
+</table>
+{% endblock %}

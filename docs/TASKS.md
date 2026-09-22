@@ -69,13 +69,34 @@ Verified end-to-end as a real script (not just library-level tests): ran `script
 - [ ] Validate against the actual e-reader's OPDS client — **needs the user's real e-reader once this is deployed somewhere reachable (Phase 9)**; not something this environment can do.
 
 ## Phase 8 — Web UI
-- [ ] Source management: list/add/edit/enable/disable, per-source config forms
-- [ ] Manual "test fetch" action per source
-- [ ] Interest profile editor
-- [ ] Schedule editor (writes the cron expression the worker reads)
-- [ ] Run history view (from `job_runs`)
-- [ ] Issue history view (list, stats, re-download)
-- [ ] Manual "run now" button wired to Phase 6
+- [x] Source management: list/add/edit/enable/disable, per-source config forms — `app/web.py` + `app/templates/sources/`. Each source type gets its own fieldset (Guardian: section; RSS: feed_url; web archive: archive_url/link_selector/initial_fetch_limit; X bookmarks: none, credentials are account-level) shown/hidden with a small vanilla-JS toggle — no JSON blob to hand-edit. Type can't be changed after creation (delete-and-recreate instead) since each connector's config shape is different.
+- [x] Manual "test fetch" action per source — `POST /ui/sources/{id}/test-fetch`, HTMX partial. Deliberately a preview only: doesn't persist articles or move `last_cursor`, verified by a test. Article titles come from external, untrusted sources, so the result is HTML-escaped — verified with a dedicated XSS-attempt test.
+- [x] Interest profile editor — part of `/ui/settings`
+- [x] Schedule editor (writes the cron expression the worker reads) — part of `/ui/settings`; still requires a worker restart to take effect (noted in the UI itself), per the Phase 6 limitation
+- [x] Run history view (from `job_runs`) — `/ui/runs`
+- [x] Issue history view (list, stats, re-download) — `/ui/issues`, cover thumbnail + download link reuse the Phase 7 OPDS routes directly rather than duplicating file-serving logic
+- [x] Manual "run now" button wired to Phase 6 — `/ui/runs`, calls `app.worker.execute_run()` directly; blocks the request until the run finishes (no job queue — fine at this project's scale for an occasional manual click)
+
+Found and fixed a real gap while writing the README: initially wrote up
+`/ui/*` as sharing the OPDS basic-auth setting, then realized while
+double-checking that claim that it wasn't actually true yet — `app/web.py`'s
+router had no `require_auth` dependency at all, so the whole web UI (source
+editing, run-now, everything) was wide open even with basic auth configured
+for OPDS. Fixed by adding the same `require_auth` dependency at the router
+level and added a dedicated test proving `/ui/*` now returns 401 without
+credentials once configured.
+
+Verified as a real running app, not just route-level tests: started the dev
+server, seeded the 5 PRD sources, and fetched every page over HTTP — all
+render correctly (checked the raw HTML, since this sandboxed environment has
+no browser to screenshot against a locally running server). Exercised the
+interactive bits for real: toggling a source's enabled state via the HTMX
+partial swap, and "test fetch" against a real (blocked-by-this-environment)
+network call, which correctly surfaced as a clean `403 Forbidden` message in
+the UI rather than a crash — a genuine, non-mocked exercise of the
+error-handling path. **Not verified**: the actual look/feel in a real
+browser (interactive HTMX behavior, responsive layout) — that needs a human
+with a browser, which this environment doesn't have.
 
 ## Phase 9 — Deployment
 - [ ] Dockerfiles for web/worker (+ Calibre server if used)

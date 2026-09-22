@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% block title %}Settings — Magazine Generator{% endblock %}
+{% block content %}
+<h1>Settings</h1>
+{% if saved %}<p class="muted">Saved.</p>{% endif %}
+<form method="post" action="/ui/settings">
+  <label>Interest profile
+    <textarea name="interest_profile" rows="6">{{ interest_profile }}</textarea>
+  </label>
+  <label>Relevance threshold <span class="muted">(0-10; articles scoring below this are excluded)</span>
+    <input type="number" step="0.5" min="0" max="10" name="relevance_threshold" value="{{ relevance_threshold }}">
+  </label>
+  <label>Schedule <span class="muted">(cron expression, e.g. "0 8 * * MON" for weekly Monday 08:00 —
+      restart the worker process to pick up a change)</span>
+    <input type="text" name="cron_expression" value="{{ cron_expression }}">
+  </label>
+  <button type="submit">Save</button>
+</form>
+{% endblock %}

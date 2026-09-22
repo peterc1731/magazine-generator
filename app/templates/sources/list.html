@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block title %}Sources — Magazine Generator{% endblock %}
+{% block content %}
+<h1>Sources</h1>
+<p><a href="/ui/sources/new">+ Add source</a></p>
+<table>
+  <tr><th>Name</th><th>Type</th><th>Status</th><th>Last cursor</th><th>Actions</th></tr>
+  {% for source in sources %}
+  {% include "sources/_row.html" %}
+  <tr><td colspan="5"><div id="test-result-{{ source.id }}"></div></td></tr>
+  {% else %}
+  <tr><td colspan="5" class="muted">No sources yet.</td></tr>
+  {% endfor %}
+</table>
+{% endblock %}

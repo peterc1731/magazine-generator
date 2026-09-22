@@ -89,3 +89,13 @@ GET /opds/issues/{id}/cover
 Set `OPDS_BASIC_AUTH_USER`/`OPDS_BASIC_AUTH_PASSWORD` in `.env` to require
 basic auth (left open if both are blank). HTTPS is a deploy-time concern
 (Caddy, Phase 9) — the dev server here is plain HTTP.
+
+### Web UI
+
+With the dev server running, visit `/ui/sources` (or just `/ui/`, which
+redirects there): manage sources (add/edit/enable/disable, per-type config
+forms, a "test fetch" preview that doesn't touch the DB), edit the interest
+profile/relevance threshold/cron schedule at `/ui/settings`, view run
+history and trigger a manual run at `/ui/runs`, and browse generated issues
+at `/ui/issues`. Same basic-auth setting as the OPDS catalog applies here
+too (it's not currently split out separately).

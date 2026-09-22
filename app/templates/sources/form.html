@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+{% block title %}{{ 'Edit' if source else 'Add' }} source — Magazine Generator{% endblock %}
+{% block content %}
+<h1>{{ 'Edit' if source else 'Add' }} source</h1>
+
+{% if error %}<p class="error">{{ error }}</p>{% endif %}
+
+<form method="post" action="{{ '/ui/sources/' + source.id if source else '/ui/sources' }}">
+  <label>Name
+    <input type="text" name="name" value="{{ source.name if source else '' }}" required>
+  </label>
+
+  <label>Type
+    <select name="type" id="source-type" onchange="showFieldsFor(this.value)" {{ 'disabled' if source else '' }}>
+      {% for type_value, type_label in source_types %}
+      <option value="{{ type_value }}"
+        {{ 'selected' if (source.type.value if source else '') == type_value else '' }}>
+        {{ type_label }}
+      </option>
+      {% endfor %}
+    </select>
+    {% if source %}
+    <input type="hidden" name="type" value="{{ source.type.value }}">
+    <span class="muted">Type can't be changed after creation — delete and re-add if needed.</span>
+    {% endif %}
+  </label>
+
+  <fieldset data-type="guardian_api">
+    <legend>Guardian API</legend>
+    <label>Section <span class="muted">(optional, e.g. "technology")</span>
+      <input type="text" name="section" value="{{ source.config.section if source else '' }}">
+    </label>
+  </fieldset>
+
+  <fieldset data-type="rss">
+    <legend>RSS</legend>
+    <label>Feed URL
+      <input type="text" name="feed_url" value="{{ source.config.feed_url if source else '' }}">
+    </label>
+  </fieldset>
+
+  <fieldset data-type="web_archive">
+    <legend>Web archive</legend>
+    <label>Archive URL
+      <input type="text" name="archive_url" value="{{ source.config.archive_url if source else '' }}">
+    </label>
+    <label>Link selector <span class="muted">(CSS selector matching each issue's &lt;a&gt;)</span>
+      <input type="text" name="link_selector" value="{{ source.config.link_selector if source else '' }}">
+    </label>
+    <label>Initial fetch limit <span class="muted">(most recent N issues on first run, default 5)</span>
+      <input type="number" name="initial_fetch_limit"
+             value="{{ source.config.initial_fetch_limit if source else '' }}">
+    </label>
+  </fieldset>
+
+  <fieldset data-type="x_bookmarks">
+    <legend>X bookmarks</legend>
+    <p class="muted">No per-source config — credentials come from environment
+      variables (see <code>scripts/x_oauth_setup.py</code>).</p>
+  </fieldset>
+
+  <button type="submit">Save</button>
+  <a href="/ui/sources">Cancel</a>
+</form>
+
+<script>
+  function showFieldsFor(type) {
+    document.querySelectorAll("fieldset[data-type]").forEach((el) => {
+      el.style.display = el.dataset.type === type ? "block" : "none";
+    });
+  }
+  showFieldsFor(document.getElementById("source-type").value);
+</script>
+{% endblock %}

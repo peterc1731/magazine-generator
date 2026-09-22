@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block title %}Runs — Magazine Generator{% endblock %}
+{% block content %}
+<h1>Runs</h1>
+<form method="post" action="/ui/runs/run-now">
+  <button type="submit">Run now</button>
+  <span class="muted">Blocks until the run finishes — may take a while.</span>
+</form>
+<table>
+  <tr><th>Started</th><th>Status</th><th>Found</th><th>Included</th><th>Excluded</th><th>Errors</th></tr>
+  {% for run in runs %}
+  <tr>
+    <td>{{ run.started_at.strftime('%Y-%m-%d %H:%M') }}</td>
+    <td><span class="badge badge-{{ run.status.value }}">{{ run.status.value }}</span></td>
+    <td>{{ run.articles_found }}</td>
+    <td>{{ run.articles_included }}</td>
+    <td>{{ run.articles_excluded }}</td>
+    <td class="error">{{ run.error_summary or '' }}</td>
+  </tr>
+  {% else %}
+  <tr><td colspan="6" class="muted">No runs yet.</td></tr>
+  {% endfor %}
+</table>
+{% endblock %}

@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}Magazine Generator{% endblock %}</title>
+  <script src="https://unpkg.com/htmx.org@2.0.4"></script>
+  <style>
+    :root { color-scheme: light dark; }
+    body {
+      font-family: -apple-system, system-ui, sans-serif;
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 1.5rem;
+      line-height: 1.5;
+    }
+    nav { display: flex; gap: 1rem; margin-bottom: 1.5rem; border-bottom: 1px solid #8884; padding-bottom: 0.75rem; }
+    nav a { text-decoration: none; font-weight: 600; }
+    table { width: 100%; border-collapse: collapse; margin-bottom: 1rem; }
+    th, td { text-align: left; padding: 0.4rem 0.6rem; border-bottom: 1px solid #8883; vertical-align: top; }
+    form.inline { display: inline; }
+    .badge { display: inline-block; padding: 0.1rem 0.5rem; border-radius: 0.75rem; font-size: 0.8rem; }
+    .badge-success { background: #1a7f371a; color: #1a7f37; }
+    .badge-failed { background: #cf222e1a; color: #cf222e; }
+    .badge-running { background: #9a67001a; color: #9a6700; }
+    .badge-enabled { background: #1a7f371a; color: #1a7f37; }
+    .badge-disabled { background: #6e77811a; color: #6e7781; }
+    fieldset { border: 1px solid #8884; border-radius: 0.5rem; margin-bottom: 1rem; }
+    label { display: block; margin-bottom: 0.75rem; }
+    input[type=text], input[type=number], textarea, select { width: 100%; padding: 0.4rem; box-sizing: border-box; }
+    button { padding: 0.4rem 0.9rem; cursor: pointer; }
+    .error { color: #cf222e; }
+    .muted { color: #6e7781; font-size: 0.9rem; }
+    .cover-thumb { width: 60px; height: 80px; object-fit: cover; border-radius: 4px; }
+  </style>
+</head>
+<body>
+  <nav>
+    <a href="/ui/sources">Sources</a>
+    <a href="/ui/settings">Settings</a>
+    <a href="/ui/runs">Runs</a>
+    <a href="/ui/issues">Issues</a>
+  </nav>
+  {% block content %}{% endblock %}
+</body>
+</html>
