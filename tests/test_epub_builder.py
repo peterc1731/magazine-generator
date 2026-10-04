@@ -164,3 +164,20 @@ def test_build_epub_drops_image_that_fails_to_fetch(tmp_path: Path) -> None:
     bodies = _document_bodies(book)
     chapter_body = next(body for body in bodies if "Article with broken image" in body)
     assert "broken.jpg" not in chapter_body
+
+
+def test_build_epub_drops_images_without_absolute_url(tmp_path: Path) -> None:
+    articles = [
+        EpubArticleInput(
+            title="Article with relative image",
+            source_name="S",
+            html_body='<p>Look:</p><img src="paint1.jpg" alt="relative">',
+        )
+    ]
+    output_path = tmp_path / "issue.epub"
+
+    build_epub(articles, issue_title="Test Issue", output_path=output_path)
+
+    bodies = _document_bodies(epub.read_epub(str(output_path)))
+    chapter_body = next(body for body in bodies if "Article with relative image" in body)
+    assert "paint1.jpg" not in chapter_body

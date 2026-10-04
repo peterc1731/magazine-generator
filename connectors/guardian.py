@@ -35,7 +35,7 @@ class GuardianAPIConnector:
             "api-key": self._config.api_key,
             "order-by": "oldest",
             "page-size": self._config.page_size,
-            "show-fields": "byline,body",
+            "show-fields": "byline,body,main",
         }
         if self._config.section:
             params["section"] = self._config.section
@@ -61,7 +61,7 @@ class GuardianAPIConnector:
                     url=result["webUrl"],
                     published_at=published_at,
                     author=fields.get("byline"),
-                    cleaned_html=fields.get("body"),
+                    cleaned_html=_with_main_image(fields),
                     raw=result,
                 )
             )
@@ -70,6 +70,17 @@ class GuardianAPIConnector:
 
         next_cursor = latest.isoformat() if latest is not None else cursor
         return FetchResult(items=items, next_cursor=next_cursor)
+
+
+def _with_main_image(fields: dict) -> str | None:
+    """The body plus the article's lead image. The API keeps the lead
+    media in a separate `main` field (the body only has inline images);
+    it's skipped when it isn't an image (e.g. a video embed)."""
+    body = fields.get("body")
+    main = fields.get("main") or ""
+    if body and "<img" in main:
+        return main + body
+    return body
 
 
 def _parse_cursor(value: str | None) -> datetime | None:

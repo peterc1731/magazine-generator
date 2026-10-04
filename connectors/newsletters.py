@@ -13,8 +13,22 @@ the domain) — check it with "Test fetch" in the sources UI.
 
 from connectors.web_archive import WebArchiveConnectorConfig
 
+# Sponsor slot, classified ads (+ their "book yours here" note), the
+# share/support footer, and the site logos.
+DENSE_DISCOVERY_REMOVE_SELECTORS = [
+    '[data-category="spo"]',
+    '[data-category="cla"]',
+    'p:-soup-contains("Classifieds are paid ads")',
+    "table.footer",
+    'img[alt="Dense Discovery"]',
+]
+
 DENSE_DISCOVERY_CONFIG = WebArchiveConnectorConfig(
     issue_url_template="https://www.densediscovery.com/archive/{number}/",
+    # Issues are email-template HTML (nested layout tables) — see
+    # tests/fixtures/html/dense_discovery_408.html.
+    content_mode="newsletter",
+    remove_selectors=DENSE_DISCOVERY_REMOVE_SELECTORS,
 )
 
 BYTES_DEV_CONFIG = WebArchiveConnectorConfig(

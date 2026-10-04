@@ -53,6 +53,18 @@
       <input type="text" name="issue_url_template"
              value="{{ source.config.issue_url_template if source and source.config.issue_url_template else '' }}">
     </label>
+    <label>Content mode <span class="muted">("Newsletter" for email-style issues laid out with tables,
+        e.g. Dense Discovery — keeps sections, titles and images in order)</span>
+      <select name="content_mode">
+        {% set mode = source.config.content_mode if source and source.config.content_mode else 'article' %}
+        <option value="article" {% if mode == 'article' %}selected{% endif %}>Article</option>
+        <option value="newsletter" {% if mode == 'newsletter' %}selected{% endif %}>Newsletter</option>
+      </select>
+    </label>
+    <label>Remove selectors <span class="muted">(newsletter mode — one CSS selector per line for ads,
+        footers, logos to strip)</span>
+      <textarea name="remove_selectors" rows="4">{{ source.config.remove_selectors | join('\n') if source and source.config.remove_selectors else '' }}</textarea>
+    </label>
     <label>Initial fetch limit <span class="muted">(most recent N issues on first run, default 5)</span>
       <input type="number" name="initial_fetch_limit"
              value="{{ source.config.initial_fetch_limit if source else '' }}">

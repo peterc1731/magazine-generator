@@ -280,6 +280,46 @@ def test_create_numbered_web_archive_source(client: TestClient, session_factory)
         )
 
 
+def test_create_newsletter_mode_source_with_remove_selectors(
+    client: TestClient, session_factory
+) -> None:
+    response = client.post(
+        "/ui/sources",
+        data={
+            "name": "Dense Discovery",
+            "type": "web_archive",
+            "issue_url_template": "https://www.densediscovery.com/archive/{number}/",
+            "content_mode": "newsletter",
+            "remove_selectors": '[data-category="spo"]\n\n  table.footer  \n',
+        },
+        follow_redirects=False,
+    )
+
+    assert response.status_code == 303
+    with session_factory() as db:
+        source = db.query(Source).filter_by(name="Dense Discovery").one()
+        assert source.config["content_mode"] == "newsletter"
+        assert source.config["remove_selectors"] == ['[data-category="spo"]', "table.footer"]
+
+    edit_page = client.get(f"/ui/sources/{source.id}/edit")
+    assert 'value="newsletter" selected' in edit_page.text
+    assert "table.footer" in edit_page.text
+
+
+def test_unknown_content_mode_is_rejected(client: TestClient) -> None:
+    response = client.post(
+        "/ui/sources",
+        data={
+            "name": "X",
+            "type": "web_archive",
+            "archive_url": "https://e.com",
+            "content_mode": "x",
+        },
+    )
+
+    assert response.status_code == 400
+
+
 def test_issue_url_template_must_contain_number_placeholder(client: TestClient) -> None:
     response = client.post(
         "/ui/sources",

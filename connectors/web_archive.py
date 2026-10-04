@@ -1,13 +1,13 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from urllib.parse import urljoin, urlsplit
 
 import httpx
 from bs4 import BeautifulSoup
 
 from connectors.base import FetchResult, RawItem
-from pipeline.extraction import extract_article
+from pipeline.extraction import ExtractedArticle, extract_article, extract_newsletter
 
 # Numbered mode: most new issues to pull in one run, and the highest issue
 # number to probe for. Both guard against a site that answers 200 for any
@@ -30,6 +30,14 @@ class WebArchiveConnectorConfig:
     "https://www.densediscovery.com/archive/{number}/". When set, the
     archive page and selector are ignored; the connector probes issue
     numbers directly, and the cursor is the last issue number seen."""
+    content_mode: str = "article"
+    """How each issue page is turned into content: "article" (trafilatura,
+    for normal article pages) or "newsletter" (keeps headings, paragraphs
+    and images in document order — for email-template layouts built from
+    nested tables, which trafilatura scrambles)."""
+    remove_selectors: list[str] = field(default_factory=list)
+    """Newsletter mode: CSS selectors for elements to drop before extracting
+    (ads, footers, logos)."""
 
 
 class WebArchiveConnector:
@@ -71,7 +79,7 @@ class WebArchiveConnector:
         for url in new_issue_urls:
             page = self._client.get(url)
             page.raise_for_status()
-            item = _to_raw_item(page.text, url)
+            item = self._to_raw_item(page.text, url)
             if item is not None:
                 items.append(item)
 
@@ -104,7 +112,7 @@ class WebArchiveConnector:
 
         items = []
         for number in sorted(pages):  # oldest first, matching publication order
-            item = _to_raw_item(pages[number], self._issue_url(number))
+            item = self._to_raw_item(pages[number], self._issue_url(number))
             if item is not None:
                 items.append(item)
 
@@ -147,8 +155,15 @@ class WebArchiveConnector:
         return self._config.issue_url_template.format(number=number)
 
 
-def _to_raw_item(html: str, url: str) -> RawItem | None:
-    extracted = extract_article(html, url=url)
+    def _to_raw_item(self, html: str, url: str) -> RawItem | None:
+        if self._config.content_mode == "newsletter":
+            extracted = extract_newsletter(html, url, self._config.remove_selectors)
+        else:
+            extracted = extract_article(html, url=url)
+        return _raw_item_from(extracted, url)
+
+
+def _raw_item_from(extracted: ExtractedArticle | None, url: str) -> RawItem | None:
     if extracted is None:
         return None
     return RawItem(

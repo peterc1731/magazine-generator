@@ -51,3 +51,41 @@ def test_fetch_since_no_new_items_keeps_cursor() -> None:
 
     assert result.items == []
     assert result.next_cursor == "2026-09-20T11:30:00+00:00"
+
+
+def _single_result_with(fields: dict) -> dict:
+    payload = json.loads(FIXTURE.read_text())
+    payload["response"]["results"] = payload["response"]["results"][:1]
+    payload["response"]["results"][0]["fields"] = fields
+    return payload
+
+
+@respx.mock
+def test_lead_image_from_main_field_is_prepended_to_body() -> None:
+    main = '<figure class="element-image"><img src="https://media.guim.co.uk/lead.jpg"></figure>'
+    route = respx.get(GUARDIAN_API_BASE).mock(
+        return_value=httpx.Response(
+            200, json=_single_result_with({"body": "<p>Body</p>", "main": main})
+        )
+    )
+    connector = GuardianAPIConnector(GuardianAPIConfig(api_key="test-key"))
+
+    result = connector.fetch_since(None)
+
+    assert result.items[0].cleaned_html == main + "<p>Body</p>"
+    assert "main" in route.calls[0].request.url.params["show-fields"]
+
+
+@respx.mock
+def test_non_image_main_media_is_skipped() -> None:
+    main = '<figure class="element-video"><iframe src="https://youtube.com/x"></iframe></figure>'
+    respx.get(GUARDIAN_API_BASE).mock(
+        return_value=httpx.Response(
+            200, json=_single_result_with({"body": "<p>Body</p>", "main": main})
+        )
+    )
+    connector = GuardianAPIConnector(GuardianAPIConfig(api_key="test-key"))
+
+    result = connector.fetch_since(None)
+
+    assert result.items[0].cleaned_html == "<p>Body</p>"

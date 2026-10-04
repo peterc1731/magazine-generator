@@ -67,6 +67,8 @@ def create_source(
     link_selector: str = Form(""),
     initial_fetch_limit: str = Form(""),
     issue_url_template: str = Form(""),
+    content_mode: str = Form("article"),
+    remove_selectors: str = Form(""),
     db: Session = Depends(get_db),
 ) -> RedirectResponse:
     config = _config_from_form(
@@ -77,6 +79,8 @@ def create_source(
         link_selector,
         initial_fetch_limit,
         issue_url_template,
+        content_mode,
+        remove_selectors,
     )
     source = Source(name=name, type=SourceType(type), config=config)
     db.add(source)
@@ -106,6 +110,8 @@ def update_source(
     link_selector: str = Form(""),
     initial_fetch_limit: str = Form(""),
     issue_url_template: str = Form(""),
+    content_mode: str = Form("article"),
+    remove_selectors: str = Form(""),
     db: Session = Depends(get_db),
 ) -> RedirectResponse:
     source = db.get(Source, source_id)
@@ -120,6 +126,8 @@ def update_source(
         link_selector,
         initial_fetch_limit,
         issue_url_template,
+        content_mode,
+        remove_selectors,
     )
     db.commit()
     return RedirectResponse(url="/ui/sources", status_code=303)
@@ -171,6 +179,8 @@ def _config_from_form(
     link_selector: str,
     initial_fetch_limit: str,
     issue_url_template: str,
+    content_mode: str,
+    remove_selectors: str,
 ) -> dict:
     if type_ == SourceType.GUARDIAN_API.value:
         return {"section": section} if section else {}
@@ -186,6 +196,13 @@ def _config_from_form(
             config["issue_url_template"] = issue_url_template
         if initial_fetch_limit:
             config["initial_fetch_limit"] = int(initial_fetch_limit)
+        if content_mode not in ("article", "newsletter"):
+            raise HTTPException(status_code=400, detail=f"Unknown content mode: {content_mode}")
+        if content_mode == "newsletter":
+            config["content_mode"] = content_mode
+            selectors = [line.strip() for line in remove_selectors.splitlines() if line.strip()]
+            if selectors:
+                config["remove_selectors"] = selectors
         return config
     if type_ == SourceType.X_BOOKMARKS.value:
         return {}

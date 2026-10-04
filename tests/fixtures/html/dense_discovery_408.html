@@ -1,0 +1,2366 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"
+ xmlns:v="urn:schemas-microsoft-com:vml"
+ xmlns:o="urn:schemas-microsoft-com:office:office">
+<head>
+
+<!--[if gte mso 9]><xml>
+<o:OfficeDocumentSettings>
+<o:AllowPNG/>
+<o:PixelsPerInch>96</o:PixelsPerInch>
+</o:OfficeDocumentSettings>
+</xml><![endif]-->
+
+<!--[if gt mso 15]>
+<style type="text/css" media="all">
+/* Outlook 2016 Height Fix */
+table, tr, td {border-collapse: collapse;}
+tr { font-size:0px; line-height:0px; border-collapse: collapse; }
+</style>
+<![endif]-->
+
+
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="format-detection" content="date=no">
+<meta name="format-detection" content="telephone=no">
+<meta name="robots" content="noindex">
+<title>Dense Discovery – Issue 408</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400;1,700&display=swap" rel="stylesheet">
+<style media="screen" type="text/css">
+
+/* ------------ REMOVE START ---------------- */
+body {
+  margin: 0;
+  padding: 0;
+  -ms-text-size-adjust: 100%;
+  -webkit-text-size-adjust: 100%;
+  font-family: "Inter", -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Arial, sans-serif;
+  font-weight: 400;
+  font-size: 17px;
+  color: #313131;
+}
+
+/* HEADLINES */
+h1 {
+  mso-line-height-rule: exactly;
+  font-size: 23px;
+  font-weight: 700;
+  line-height: 27px;
+  color: #313131;
+  Margin: 0;
+  padding: 0;
+}
+
+.issue h1 {
+  font-size: 48px;
+  line-height: 45px;
+  font-weight: 800;
+  display: inline;
+}
+.issue h1 span {
+  color: #883b31;
+  font-weight: 600;
+}
+
+.title h1 {
+  padding-left: 14px;
+  border-left: 26px solid #313131;
+}
+
+td.share h1 {
+  padding-top: 3px;
+}
+
+h1.num {
+  border-color: #29899e;
+}
+
+h1.too {
+  border-color: #db5644;
+}
+
+h1.med {
+  border-color: #7cb663;
+}
+
+h1.ins {
+  border-color: #e78931;
+}
+
+h1.boo {
+  border-color: #3175b9;
+}
+
+h1.soc {
+  border-color: #6d54a5;
+}
+
+h1.gue {
+  border-color: #c74b9e;
+}
+
+h1.pol {
+  border-color: #f1c755;
+}
+
+h1.wan {
+  border-color: #41a494;
+}
+
+h1.spl {
+  border-color: #a88c73;
+}
+
+h1.moo {
+  border-color: #8b8b4b;
+}
+
+h2 {
+  mso-line-height-rule: exactly;
+  font-size: 17px;
+  line-height: 25px;
+  font-weight: 600;
+  color: #313131;
+  Margin: 0;
+  padding: 0;
+}
+
+h3 {
+  mso-line-height-rule: exactly;
+  font-size: 17px;
+  line-height: 25px;
+  font-weight: 400;
+  color: #777777;
+  padding: 0;
+  Margin: 0;
+  Margin-bottom: 20px;
+}
+h3 a:link {
+  color: #777777;
+}
+
+/* CONTENT */
+p, li {
+  font-size: 17px;
+  line-height: 25px;
+  font-weight: 400;
+  color: #313131;
+  padding: 0;
+  Margin: 0;
+  Margin-bottom: 20px;
+}
+
+ul {
+  list-style-type: square;
+  Margin: 0;
+  padding: 0 0 0 18px;
+}
+
+.intro p, .intro li {
+  padding-right: 60px;
+}
+.intro p.grey, .intro li.grey {
+  padding-right: 0;
+  padding-left: 60px;
+}
+
+.intro ul.grey {
+  padding-right: 0;
+  padding-left: 60px;
+}
+.intro ul.grey li {
+  padding-right: 0;
+}
+
+b, strong {
+  font-weight: 600;
+}
+
+.grey, a.grey, p.grey a, span.grey a, ul.grey li, ul.grey li a {
+  color: #777777 !important;
+}
+
+.nowrap {
+  white-space: nowrap;
+}
+
+a {
+  color: #313131;
+  text-decoration: underline;
+}
+a:link, a:visited {
+  color: #313131;
+  text-decoration: underline;
+}
+a.add {
+  text-decoration: none !important;
+  font-weight: 600;
+}
+
+.header .grey, .header .grey a {
+  color: #883b31 !important;
+}
+
+td.issue a.btn {
+  color: #e26351 !important;
+}
+td.gue a.btn {
+  color: #fbf2f8 !important;
+}
+td.pol a.opt {
+  display: block;
+  margin-bottom: 5px;
+  background: #FFFFFF;
+}
+td.pol a.opt b {
+  padding: 7px 7px;
+  display: inline-block;
+  width: 20px;
+  text-align: center;
+  margin-right: 10px;
+  color: #FFFFFF;
+  background: #f1c755;
+}
+
+.lg, .intro p, .intro li {
+  font-size: 21px;
+  line-height: 31px;
+}
+
+.xl {
+  font-size: 32px;
+  line-height: 38px;
+}
+
+.txtr {
+  text-align: right;
+}
+
+.txtc {
+  text-align: center;
+}
+
+.hl {
+  background: #fdf2b4;
+}
+
+.adr {
+  border: 4px dashed #313131;
+}
+
+span.code {
+  font-family: monospace;
+}
+
+.cla {
+  background: #f1f1f1;
+  font-size: 1px;
+  line-height: 1px;
+  height: 5px;
+}
+
+/* BUTTONS */
+.btn {
+  border-radius: 10px;
+  background: #313131;
+  text-decoration: none !important;
+  display: inline-block;
+  font-weight: 500;
+  padding: 7px 15px 8px 15px;
+}
+
+.btn-lg {
+  padding: 10px 20px 11px 20px !important;
+}
+
+.btn-action {
+  background: #ffa23a !important;
+}
+
+.btn-y {
+  background: #afe6a2 !important;
+}
+
+.btn-n {
+  background: #edc8c8 !important;
+}
+
+table.footer a.btn {
+  color: #f1f1f1 !important;
+  margin-top: 4px;
+}
+
+/* IMAGES */
+.img {
+  display: block;
+  max-width: 740px;
+  width: 100%;
+}
+
+.img-l {
+  margin-bottom: 5px;
+}
+
+.img-b {
+  display: block;
+  width: auto;
+  height: 250px;
+}
+
+/* TABLE FORMATTING */
+table {
+  border-spacing: 0;
+  mso-table-lspace: 0pt;
+  mso-table-rspace: 0pt;
+}
+
+table td {
+  border-collapse: collapse;
+}
+
+td.num .grey, td.num .grey a, td.num h3 {
+  color: #828f92 !important;
+}
+
+td.med .grey, td.med .grey a, td.med h3 {
+  color: #808080 !important;
+}
+
+td.ins .grey, td.ins .grey a, td.ins h3 {
+  color: #837a71 !important;
+}
+
+td.soc .grey, td.soc .grey a, td.soc h3 {
+  color: #857d96 !important;
+}
+
+td.gue .grey, td.gue .grey a, td.gue h3 {
+  color: #9b8b96 !important;
+}
+
+td.pol .grey, td.pol .grey a, td.pol h3 {
+  color: #8f8c84 !important;
+}
+
+td.wan .grey, td.wan .grey a, td.wan h3 {
+  color: #7e908d !important;
+}
+
+td.spl .grey, td.spl .grey a, td.spl h3 {
+  color: #968d85 !important;
+}
+
+td.moo .grey, td.moo .grey a, td.moo h3 {
+  color: #929287 !important;
+}
+
+td.grey {
+  background: #f1f1f1;
+}
+
+td.num {
+  background: #e8f5f7;
+}
+
+td.too {
+  background: #fbf1f0;
+}
+
+td.med {
+  background: #f1f6ef;
+}
+
+td.ins {
+  background: #faf4ef;
+  border-bottom: 5px solid #FFFFFF;
+}
+
+td.soc {
+  background: #f3f1f8;
+}
+
+td.gue {
+  background: #fbf2f8;
+}
+
+td.pol {
+  background: #faf4e5;
+}
+
+td.wan {
+  background-color: #eaf5f3;
+  background-size: 50%;
+  background-position: bottom 0 right 40px;
+  background-repeat: no-repeat;
+}
+
+td.boo {
+  background: #eaf2fa;
+}
+
+td.spl {
+  background: #f6f3f1;
+}
+
+td.moo {
+  background: #f4f4eb;
+}
+
+td.ins .lined {
+  border-top: 5px solid #faf4ef;
+  border-left: 5px solid #faf4ef;
+  border-bottom: 5px solid #faf4ef;
+}
+
+td.soc .lined {
+  border-top: 5px solid #f3f1f8;
+  border-left: 5px solid #f3f1f8;
+  border-bottom: 5px solid #f3f1f8;
+}
+
+td.issue {
+  border-bottom: 5px solid #FFFFFF;
+  background: #e26351;
+}
+
+td.welcome {
+  background: #f1f1f1;
+}
+
+td.title {
+  padding: 30px 40px 30px 0;
+}
+
+td.share {
+  width: 40%;
+}
+
+.footer {
+  padding-top: 40px;
+  padding-bottom: 20px;
+}
+
+.tighten {
+  font-size: 1px;
+  line-height: 1px;
+}
+
+.spc {
+  font-size: 1px;
+  line-height: 1;
+  padding-top: 25px;
+}
+
+.pt0 {
+  padding-top: 0px;
+}
+
+.pt5 {
+  padding-top: 5px;
+}
+
+.pt10 {
+  padding-top: 10px;
+}
+
+.pt15 {
+  padding-top: 15px;
+}
+
+.pt20 {
+  padding-top: 20px;
+}
+
+.pt30 {
+  padding-top: 30px;
+}
+
+.pt35 {
+  padding-top: 35px;
+}
+
+.pt40 {
+  padding-top: 40px;
+}
+
+.pt50 {
+  padding-top: 50px;
+}
+
+.pt60 {
+  padding-top: 60px;
+}
+
+.pr0 {
+  padding-right: 0px;
+}
+
+.pr5 {
+  padding-right: 5px;
+}
+
+.pr10 {
+  padding-right: 10px;
+}
+
+.pr15 {
+  padding-right: 15px;
+}
+
+.pr20 {
+  padding-right: 20px;
+}
+
+.pr30 {
+  padding-right: 30px;
+}
+
+.pr35 {
+  padding-right: 35px;
+}
+
+.pr40 {
+  padding-right: 40px;
+}
+
+.pr50 {
+  padding-right: 50px;
+}
+
+.pr60 {
+  padding-right: 60px;
+}
+
+.pb0 {
+  padding-bottom: 0px;
+}
+
+.pb5 {
+  padding-bottom: 5px;
+}
+
+.pb10 {
+  padding-bottom: 10px;
+}
+
+.pb15 {
+  padding-bottom: 15px;
+}
+
+.pb20 {
+  padding-bottom: 20px;
+}
+
+.pb30 {
+  padding-bottom: 30px;
+}
+
+.pb35 {
+  padding-bottom: 35px;
+}
+
+.pb40 {
+  padding-bottom: 40px;
+}
+
+.pb50 {
+  padding-bottom: 50px;
+}
+
+.pb60 {
+  padding-bottom: 60px;
+}
+
+.pl0 {
+  padding-left: 0px;
+}
+
+.pl5 {
+  padding-left: 5px;
+}
+
+.pl10 {
+  padding-left: 10px;
+}
+
+.pl15 {
+  padding-left: 15px;
+}
+
+.pl20 {
+  padding-left: 20px;
+}
+
+.pl30 {
+  padding-left: 30px;
+}
+
+.pl35 {
+  padding-left: 35px;
+}
+
+.pl40 {
+  padding-left: 40px;
+}
+
+.pl50 {
+  padding-left: 50px;
+}
+
+.pl60 {
+  padding-left: 60px;
+}
+
+.mt0 {
+  Margin-top: 0px;
+}
+
+.mt5 {
+  Margin-top: 5px;
+}
+
+.mt10 {
+  Margin-top: 10px;
+}
+
+.mt15 {
+  Margin-top: 15px;
+}
+
+.mt20 {
+  Margin-top: 20px;
+}
+
+.mt30 {
+  Margin-top: 30px;
+}
+
+.mt35 {
+  Margin-top: 35px;
+}
+
+.mt40 {
+  Margin-top: 40px;
+}
+
+.mt50 {
+  Margin-top: 50px;
+}
+
+.mt60 {
+  Margin-top: 60px;
+}
+
+.mr0 {
+  Margin-right: 0px;
+}
+
+.mr5 {
+  Margin-right: 5px;
+}
+
+.mr10 {
+  Margin-right: 10px;
+}
+
+.mr15 {
+  Margin-right: 15px;
+}
+
+.mr20 {
+  Margin-right: 20px;
+}
+
+.mr30 {
+  Margin-right: 30px;
+}
+
+.mr35 {
+  Margin-right: 35px;
+}
+
+.mr40 {
+  Margin-right: 40px;
+}
+
+.mr50 {
+  Margin-right: 50px;
+}
+
+.mr60 {
+  Margin-right: 60px;
+}
+
+.mb0 {
+  Margin-bottom: 0px;
+}
+
+.mb5 {
+  Margin-bottom: 5px;
+}
+
+.mb10 {
+  Margin-bottom: 10px;
+}
+
+.mb15 {
+  Margin-bottom: 15px;
+}
+
+.mb20 {
+  Margin-bottom: 20px;
+}
+
+.mb30 {
+  Margin-bottom: 30px;
+}
+
+.mb35 {
+  Margin-bottom: 35px;
+}
+
+.mb40 {
+  Margin-bottom: 40px;
+}
+
+.mb50 {
+  Margin-bottom: 50px;
+}
+
+.mb60 {
+  Margin-bottom: 60px;
+}
+
+.ml0 {
+  Margin-left: 0px;
+}
+
+.ml5 {
+  Margin-left: 5px;
+}
+
+.ml10 {
+  Margin-left: 10px;
+}
+
+.ml15 {
+  Margin-left: 15px;
+}
+
+.ml20 {
+  Margin-left: 20px;
+}
+
+.ml30 {
+  Margin-left: 30px;
+}
+
+.ml35 {
+  Margin-left: 35px;
+}
+
+.ml40 {
+  Margin-left: 40px;
+}
+
+.ml50 {
+  Margin-left: 50px;
+}
+
+.ml60 {
+  Margin-left: 60px;
+}
+
+/* ------------ REMOVE END ---------------- */
+@media screen and (max-width: 740px) {
+  body, h2, h3, p, li {
+    font-size: 16px !important;
+    line-height: 24px !important;
+  }
+  .fr, .header, .body, .footer {
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+  .title h1 {
+    padding-left: 6px !important;
+    border-left-width: 9px !important;
+  }
+  .pl40 {
+    padding-left: 15px !important;
+  }
+  .pr40 {
+    padding-right: 15px !important;
+  }
+  .pl20 {
+    padding-left: 15px !important;
+  }
+  .pr20 {
+    padding-right: 15px !important;
+  }
+  .pt20 {
+    padding-top: 15px !important;
+  }
+  .pb20 {
+    padding-bottom: 15px !important;
+  }
+  .pt30 {
+    padding-top: 10px !important;
+  }
+  .pt35 {
+    padding-top: 20px !important;
+  }
+  .pr35 {
+    padding-right: 10px !important;
+  }
+  .pl35 {
+    padding-left: 10px !important;
+  }
+  .mobpt0 {
+    padding-top: 0 !important;
+  }
+  .mobpb0 {
+    padding-bottom: 0 !important;
+  }
+  .mobptb0 {
+    padding-top: 0 !important;
+    padding-bottom: 0 !important;
+  }
+  .mobpl0 {
+    padding-left: 0 !important;
+  }
+  .mobpr0 {
+    padding-right: 0 !important;
+  }
+  .mobpl15 {
+    padding-left: 15px !important;
+  }
+  .mobmb0 {
+    margin-bottom: 0 !important;
+  }
+  .mobmb20 {
+    margin-bottom: 20px !important;
+  }
+  .mobmb15 {
+    margin-bottom: 15px !important;
+  }
+  h1, .issue h1 {
+    font-size: 24px !important;
+    line-height: 30px !important;
+  }
+  .lg, .intro p, .intro li {
+    font-size: 20px !important;
+    line-height: 29px !important;
+  }
+  .xl {
+    font-size: 27px !important;
+    line-height: 34px !important;
+  }
+  .intro p, .intro p.grey {
+    padding: 0 !important;
+  }
+  .intro ul.grey {
+    padding: 0 0 0 20px !important;
+  }
+  td.wan {
+    background-size: 80% !important;
+    background-position: bottom right 12px !important;
+    padding-bottom: 100px !important;
+  }
+  td.ins .lined {
+    border-right: 5px solid #faf4ef;
+    border-bottom: none !important;
+  }
+  td.soc .lined {
+    border-right: 5px solid #f3f1f8;
+    border-bottom: none !important;
+  }
+  td.share {
+    width: 70% !important;
+    text-align: right !important;
+  }
+  td.share a.btn {
+    white-space: nowrap !important;
+  }
+  .footer {
+    padding-top: 20px !important;
+    padding-bottom: 5px !important;
+  }
+  .spc {
+    padding-top: 15px !important;
+  }
+  .mob-hide {
+    display: none !important;
+  }
+}
+  
+
+/* ------------ REMOVE START ---------------- */
+
+/* optional custom code here */
+
+/* ------------ REMOVE END ---------------- */
+
+</style>
+
+<!--[if mso]>
+<style type="text/css">
+body, table, td, h1, h2, h3, p {font-family: Arial, sans-serif !important;}
+</style>
+<![endif]-->
+
+<style media="screen" type="text/css">
+
+.ios-footer a {
+  color: #aaaaaa !important;
+  text-decoration: underline;
+}
+
+.yshortcuts a {
+  border-bottom: none !important;
+}
+
+.ExternalClass {
+  width: 100%;
+}
+
+.ExternalClass,
+.ExternalClass p,
+.ExternalClass span,
+.ExternalClass font,
+.ExternalClass td,
+.ExternalClass div {
+  line-height: 100%;
+}
+
+.ReadMsgBody {
+  width: 100%;
+  background-color: #ebebeb;
+}
+
+img {
+  -ms-interpolation-mode: bicubic;
+}
+
+a[href^="x-apple-data-detectors:"],
+a[x-apple-data-detectors] {
+  color: inherit !important;
+  text-decoration: none !important;
+  font-size: inherit !important;
+  font-family: inherit !important;
+  font-weight: inherit !important;
+  line-height: inherit !important;
+}
+
+</style>
+
+
+</head>
+<body bgcolor="#FFFFFF" leftmargin="0" topmargin="0" marginwidth="0" marginheight="0">
+
+
+<table border="0" width="100%" cellpadding="0" cellspacing="0" bgcolor="#FFFFFF">
+  <tr>
+    <td align="center" valign="top" bgcolor="#e26351">
+
+      <table border="0" width="740" cellpadding="0" cellspacing="0" class="header mobpt0 pt20">
+
+        <tr>
+          <td align="left">
+
+          <!--[if mso]>
+          <table border="0" cellpadding="0" cellspacing="0" width="100%">
+          <tr><td width="40%" valign="top"><![endif]-->
+
+          <table width="296" border="0" cellpadding="0" cellspacing="0" align="left" class="fr">
+            <tr>
+              <td class="pt20 pr20 pl40" valign="top"  data-category="quo" data-item="40801">
+
+                <p>
+                  Ask of any proposed change or innovation: What will this do to our community? How will this affect our common wealth?
+                </p>
+                <p>
+                  <b>– Wendell Berry</b>                </p>
+
+              </td>
+            </tr>
+          </table>
+
+          <!--[if mso]></td><td width="60%" valign="top"><![endif]-->
+
+          <table width="444" border="0" cellpadding="0" cellspacing="0" align="right" class="fr">
+            <tr>
+              <td class="pl20 pt20 pr40" valign="top" align="right"  data-category="art" data-item="40802">
+
+                <p>
+                  <img src="head.jpg" width="100%" height="auto" alt="" class="img">
+                </p>
+
+                <p class="grey">
+                  Artwork by <a href="https://www.instagram.com/natalieshilo">Natalie Shilo</a>                </p>
+
+
+              </td>
+            </tr>
+          </table>
+
+          <!--[if mso]></td></tr></table><![endif]-->
+
+          </td>
+        </tr>
+
+
+
+        <tr>
+          <td align="left" valign="bottom" class="tighten pl40"><a href="https://www.densediscovery.com"><img src="https://www.densediscovery.com/img/logo-top-new.png" height="auto" width="111" alt="Dense Discovery" style="float:left;display:block"></a></td>
+        </tr>
+
+      </table>
+
+
+
+    </td>
+  </tr>
+</table>
+
+
+
+<table border="0" width="100%" cellpadding="0" cellspacing="0" bgcolor="#FFFFFF">
+  <tr>
+    <td align="center" valign="top">
+
+      <table border="0" width="740" cellpadding="0" cellspacing="0" class="body">
+
+        <tr>
+            <td align="left" valign="top" class="tighten pl40 pb10"><a href="https://www.densediscovery.com"><img src="https://www.densediscovery.com/img/logo-bottom-new.png" height="auto" width="111" alt="Dense Discovery" style="float:left;display:block"></a></td>
+        </tr>
+
+        <tr><td class="spc">&nbsp;</td></tr>
+
+        
+
+
+        <tr>
+          <td class="pt20 pr20 pl40 pb40 intro" align="left" role="main" data-category="int" data-item="40803">
+
+            
+                <h1 class="mb30">
+                Hello discoverers!
+                </h1>
+
+                
+       <p>I don’t intend for DD to turn into another op-ed column chasing the week’s AI headlines, but if you’ve read the last few issues, you’ll have noticed I keep circling the same question: what kind of power is being built around these tools, and what can the rest of us do about it?</p>
+
+       <p>So the title of Garrett Bucks’ recent essay got my attention: <a href="https://thewhitepages.net/p/the-opposite-of-the-apocalypse-is?ref=DenseDiscovery-408">The opposite of the apocalypse is a neighborhood</a></p>
+<p>Bucks expresses something that goes through my head whenever I hear one of these CEOs talking nonchalantly about the likelihood of the end times:</p>
+<p class="grey">“If I were an executive at a company that produced water guzzling theft machines, and I also believed that there was more than a 10% chance that my robots would kill us all, I’d like to think that I’d offer more than vague gestures of concern.”</p>
+<p>Like Bucks, I think the apocalypse talk is overcooked. The more pressing worry is the one Bucks borrows from Tressie McMillan Cottom: that AI is just one visible part of <span class="grey">“a superstructure that merges regressive politics with unchecked economic power in the guise of technological innovation”.</span></p>
+<p>Gary Marcus makes a similar point in <a href="https://garymarcus.substack.com/p/the-case-for-boycotting-generative?ref=DenseDiscovery-408">another recent essay</a>. Extinction isn’t what keeps him up at night. Wars escalated by AI-generated disinformation and hacks on critical infrastructure do.</p>
+<p class="grey">“My p(doom) is low; my p(dystopia) is high.”</p>
+<p>A handful of men rewriting the rules of the economy and geopolitics out of greed and a hunger for power makes for a duller plot than killer robots. It’s still plenty dangerous.</p>
+<p>I share Bucks’ anger about the way tech sneaks into every crevice of our lives without us always noticing (or noticing too late) what we give up in return.</p>
+<p class="grey">“I’m mad at myself for all the previous times I’ve been conned, when I thought that past technological breakthroughs actually would make my life better, when I excused somebody else’s love of wealth and power because my phone got cooler and played more songs on demand.”</p>
+<p>Don’t look for much practical advice in his essay. It’s more like a love letter to being human.</p>
+<p class="grey">“When everything that makes you human is outsourced to a big, dumb beep boop machine, the only logical responses is to revel in the absolute best parts of our humanity, loudly and collectively.”</p>
+<p class="grey">“And that is enough, at least in aggregate, at least with persistence and organization and threads being tied between one community’s fight against a data center and another town’s valiant stand for all of our kids’ future.”</p>
+<p>I’m hardly a purist here. I have a skeleton Facebook account for Marketplace sales, I still collaborate in Google Docs, and yes, I lean on <a href="https://www.densediscovery.com/read.php?show=ai">the odd AI tool</a> when a job is tedious enough.</p>
+  <p>Most of us are tangled up in these systems in one way or another – let’s not pretend otherwise. But being implicated doesn’t disqualify us from calling them out, in the same way you can drive a car and still argue for cities built around walking/cycling.</p>
+<p>The difficult part is making sure the convenience doesn’t end up making our decisions. So it’s worth pausing to ask what we actually want from a human life, and whether the tools we reach for each day are bringing us closer to it or talking us out of it.</p>
+<p class="grey">“We don’t need the robots. We never did. We need to be less alone, and less vulnerable to the whims of billionaires. We need our towns and neighborhoods to be celebrated, to feel like where we live and who we are matters. We need neighbors who pick up the slack when we reach the limit of our abilities and energy.”</p>
+
+<p class="grey">“It isn’t just that we don’t want to die. It’s that we want to live, and we don’t want to do it alone.”</p>
+
+
+
+ 
+
+
+            <p>And now to this week’s discoveries. – Kai</p>
+
+            
+
+            </td>
+          </tr>
+
+
+
+
+          
+          
+
+
+
+
+          
+          
+          <tr>
+            <td class="title" align="left">
+
+              <h1>Sponsor</h1>
+
+            </td>
+          </tr>
+
+
+          <!-- AD_A 
+          EMBED START-->
+          <tr>
+            <td align="left" class="grey" data-category="spo" data-item="40804">
+          
+            <!--[if mso]>
+            <table border="0" cellpadding="0" cellspacing="0" width="100%">
+            <tr><td width="50%" valign="top"><![endif]-->
+          
+            <table width="370" border="0" cellpadding="0" cellspacing="0" align="left" class="fr">
+              <tr>
+                <td class="pr20 mobpr0" valign="top">
+          
+                  <p class="mb0 mobmb20">
+                    <img src="sponsor.jpg" alt="IMG" width="100%" height="auto" class="img">
+                  </p>
+          
+                </td>
+              </tr>
+            </table>
+          
+            <!--[if mso]></td><td width="50%" valign="top"><![endif]-->
+          
+            <table width="370" border="0" cellpadding="0" cellspacing="0" align="right" class="fr">
+              <tr>
+                <td class="pt35 pr40 pl20 pb20 mobptb0 _a" valign="top">
+          
+                <p class="lg">Your feed used to be your friends.</p>
+
+<p>Now it’s ads, strangers, and whatever keeps you scrolling. <a href="https://boopr.com/from/dd"><b>boopr</b></a> is that feed again: the people you actually know, their newest posts first. That’s it.</p>
+
+<p>Open it, catch up, message a friend, maybe send a boop (a photo for one person, gone once they’ve seen it). A session takes about 30 seconds.</p>
+
+<p>There’s no Discover tab and no public profiles. You add friends in person or with a code, so the feed reads like a group chat: real life, not content.</p>
+
+<p>Only you and your friends can see what you share. No ads, ever. boopr is funded by an optional subscription, not by selling your attention.</p>
+
+<p>Free on iOS and Android. No email or phone number to sign up.</p>
+
+<p><b><a href="https://boopr.com/from/dd">DD readers, have a look</a> →</b>
+                                  </p>
+          
+                </td>
+              </tr>
+            </table>
+          
+            <!--[if mso]></td></tr></table><![endif]-->
+          
+            </td>
+          </tr>
+          <!--AD EMBED END-->
+          
+
+
+
+          <tr><td class="spc">&nbsp;</td></tr>
+
+          
+          
+          
+
+
+
+
+          
+
+          <tr>
+            <td class="title" align="left" >
+
+              <h1 class="too">Tools</h1>
+
+            </td>
+          </tr>
+
+
+          <tr>
+            <td align="left" data-category="too" data-item="40805">
+
+            <!--[if mso]>
+            <table border="0" cellpadding="0" cellspacing="0" width="100%">
+            <tr><td width="40%" valign="top"><![endif]-->
+
+            <table width="296" border="0" cellpadding="0" cellspacing="0" align="left" class="fr">
+              <tr>
+                <td class="pl40 pr20" valign="top">
+
+                  <h2><a href="https://www.gravitynotes.app/?ref=DenseDiscovery-408">Gravity</a></h2>
+
+                  <h3>One-stream notes app</h3>
+
+                </td>
+              </tr>
+            </table>
+
+            <!--[if mso]></td><td width="60%" valign="top"><![endif]-->
+
+            <table width="444" border="0" cellpadding="0" cellspacing="0" align="right" class="fr">
+              <tr>
+                <td class="pl20 pr40 pb20" valign="top">
+
+                  <p>
+                    Built around an ‘append-and-review’ method, Gravity is a note-taking app with a single, endless stream instead of folders and tags. New thoughts go on top, old ones sink as you add more, and a swipe bumps anything still relevant back up. Local-first with optional iCloud sync, on iOS, macOS and Android, and <i>no</i> subscription. 
+                  </p>
+
+                </td>
+              </tr>
+            </table>
+
+            <!--[if mso]></td></tr></table><![endif]-->
+
+            </td>
+          </tr>
+
+
+
+          <tr>
+            <td align="left" data-category="too" data-item="40806">
+
+            <!--[if mso]>
+            <table border="0" cellpadding="0" cellspacing="0" width="100%">
+            <tr><td width="40%" valign="top"><![endif]-->
+
+            <table width="296" border="0" cellpadding="0" cellspacing="0" align="left" class="fr">
+              <tr>
+                <td class="pl40 pr20" valign="top">
+
+                  <h2><a href="https://activatefitnessapp.com/?ref=DenseDiscovery-408">Activate Fitness</a></h2>
+
+                  <h3>Steps buy you screen time</h3>
+
+                </td>
+              </tr>
+            </table>
+
+            <!--[if mso]></td><td width="60%" valign="top"><![endif]-->
+
+            <table width="444" border="0" cellpadding="0" cellspacing="0" align="right" class="fr">
+              <tr>
+                <td class="pl20 pb20 pr40" valign="top">
+
+                  <p>
+                    An activity app that makes kids move to unlock other apps. Parents can set activity goals and app restrictions on a paired iPhone, along with lockout times for school and bedtime, and bonus minutes for things like chores or good grades. I’m not entirely sold on turning exercise and good behaviour into a points system and using more apps to solve our screen problem, but I can see why some parents might find it useful.
+                  </p>
+
+                </td>
+              </tr>
+            </table>
+
+            <!--[if mso]></td></tr></table><![endif]-->
+
+            </td>
+          </tr>
+
+
+          <tr>
+            <td align="left" data-category="too" data-item="40807">
+
+            <!--[if mso]>
+            <table border="0" cellpadding="0" cellspacing="0" width="100%">
+            <tr><td width="40%" valign="top"><![endif]-->
+
+            <table width="296" border="0" cellpadding="0" cellspacing="0" align="left" class="fr">
+              <tr>
+                <td class="pl40 pr20" valign="top">
+
+                  <h2><a href="https://atlasformac.com/?ref=DenseDiscovery-408">Atlas</a></h2>
+
+                  <h3>Mac moodboard app</h3>
+
+                </td>
+              </tr>
+            </table>
+
+            <!--[if mso]></td><td width="60%" valign="top"><![endif]-->
+
+            <table width="444" border="0" cellpadding="0" cellspacing="0" align="right" class="fr">
+              <tr>
+                <td class="pl20 pb20 pr40" valign="top">
+
+                  <p>
+                    If you hoard reference images, Atlas keeps them in ordinary folders on your own Mac (or your cloud drive)  and lets you browse them as a grid, push them around on a canvas, or drift through an endless ‘Infinity’ view. For saving, use their browser extension or the menu bar drop target. And it’s a one-time fee. <span class="hl"><b>Friends of DD</b> enjoy a 20% discount.
+                   <a href="https://www.densediscovery.com/friends/">Become a Friend</a> to access specials like this.                  </span>
+                  </p>
+
+                </td>
+              </tr>
+            </table>
+
+            <!--[if mso]></td></tr></table><![endif]-->
+
+            </td>
+          </tr>
+
+
+
+          <tr>
+            <td align="left" data-category="too" data-item="40808">
+
+            <!--[if mso]>
+            <table border="0" cellpadding="0" cellspacing="0" width="100%">
+            <tr><td width="40%" valign="top"><![endif]-->
+
+            <table width="296" border="0" cellpadding="0" cellspacing="0" align="left" class="fr">
+              <tr>
+                <td class="pl40 pr20" valign="top">
+
+                  <h2><a href="https://soitis.dev/control-panel-for-youtube?ref=DenseDiscovery-408">Control Panel for YouTube
+</a></h2>
+
+                  <h3>Make YouTube behave again</h3>
+
+                </td>
+              </tr>
+            </table>
+
+            <!--[if mso]></td><td width="60%" valign="top"><![endif]-->
+
+            <table width="444" border="0" cellpadding="0" cellspacing="0" align="right" class="fr">
+              <tr>
+                <td class="pl20 pb20 pr40" valign="top">
+
+                  <p>
+                    Block ads, hide Shorts and AI summaries, switch off Autoplay, related videos and the Home feed entirely. This browser extension <span class="grey">“gives you more control over YouTube by adding missing options and UI improvements”</span>. There’s a long tail of smaller fixes too – hiding watched videos past a percentage you set, muting whole channels, restoring bits of the old player UI. There is even a mobile version.
+                  </p>
+
+                </td>
+              </tr>
+            </table>
+
+            <!--[if mso]></td></tr></table><![endif]-->
+
+            </td>
+          </tr>
+
+          
+
+
+
+
+
+
+
+        
+          
+        
+          <tr>
+            <td class="title" align="left">
+
+              <h1 class="wan">Wanderings</h1>
+
+            </td>
+          </tr>
+
+          <tr>
+            <td align="left" class="wan" style="background-image: url('https://www.densediscovery.com/img/wan.png');">
+
+            <!--[if mso]>
+            <table border="0" cellpadding="0" cellspacing="0" width="100%">
+            <tr><td width="40%" valign="top"><![endif]-->
+
+            <table width="296" border="0" cellpadding="0" cellspacing="0" align="right" class="fr">
+              <tr>
+                <td class="pl20 pt35 pr40" valign="top">
+
+                  
+                  <p class="grey lg">
+                      Charming discoveries from the internet’s back alleys that you don’t need but might love.
+                  </p>
+
+
+                </td>
+              </tr>
+            </table>
+
+            <!--[if mso]></td><td width="60%" valign="top"><![endif]-->
+
+            <table width="444" border="0" cellpadding="0" cellspacing="0" align="left" class="fr">
+              <tr>
+              <td class="pt35 pr20 pl40 pb20 mobptb0" valign="top">
+                 
+              <span data-category="wan" data-item="40809">
+                <h2><a href="https://www.quiverquant.com/lobbying/?ref=DenseDiscovery-408">Corporate Lobbying</a></h2>
+                <p>A tool that scrapes the lobbying disclosures US companies are legally required to file and maps them to stock tickers. You can search by company or keyword and see who’s paying what to influence which bills.</p>
+
+              </span><span data-category="wan" data-item="40810">
+                <h2><a href="https://laurentiugabriel.github.io/ChipTycoon/?ref=DenseDiscovery-408">ChipTycoon</a></h2>
+                <p>A little isometric chip factory where you watch a single wafer going through all twenty-two stages of chipmaking – sand to rough silicon to a mirror-flat disc, then coated, printed, etched and wired layer by layer.</p>
+              
+              </span><span data-category="wan" data-item="40811">
+                <h2><a href="https://bentossell.com/council-spend/?ref=DenseDiscovery-408">Council Spend Map</a></h2>
+                <p>A project that pulls together the payment data English councils are required to publish and puts it on a searchable map. You can poke around by council, supplier, category or year and see who’s actually getting public money.</p>
+
+              </span><span data-category="wan" data-item="40812">
+                <h2><a href="https://www.legal-walls.net/?ref=DenseDiscovery-408">Legal Graffiti Walls</a></h2>
+                <p>A community-maintained directory of legal graffiti walls worldwide, with some 2,590 spots mapped across 70-odd countries – halls of fame, underpasses, even Antarctica!</p>
+
+              </span><span data-category="wan" data-item="40813">
+                <h2><a href="https://technooptimism.org/?ref=DenseDiscovery-408">Techno Optimism Archive</a></h2>
+                <p>This will have to grow a lot to cover the last two decades: an archive of newspaper clippings and posts from the moments when a new invention was going to fix everything – and then didn’t.</p>
+
+              </span>          
+
+
+                </td>
+              </tr>
+            </table>
+
+            <!--[if mso]></td></tr></table><![endif]-->
+
+            </td>
+          </tr>
+
+
+          <tr><td class="spc">&nbsp;</td></tr>
+
+          
+        
+
+
+
+
+
+
+        
+        
+
+        <tr>
+          <td class="title" align="left">
+
+            <h1 class="boo">Books</h1>
+
+          </td>
+        </tr>
+
+      
+
+        <tr>
+          <td align="left">
+
+          <!--[if mso]>
+          <table border="0" cellpadding="0" cellspacing="0" width="100%">
+          <tr><td width="50%" valign="top"><![endif]-->
+
+          <table width="370" border="0" cellpadding="0" cellspacing="0" align="left" class="fr" data-category="boo" data-item="40814">
+            <tr>
+              <td class="boo pt35 pl40" valign="top">
+
+                <img src="book1.jpg" alt="IMG" width="auto" height="250" class="img-b" loading="lazy">
+
+              </td>
+            </tr>  
+
+            <tr>
+              <td class="pl40 pr20 pb10 pt35 _a" valign="top">
+
+
+                <h2><a href="https://bookpile.org/b/9780593657102?ref=DenseDiscovery-408">The Creatures’ Guide to Caring</a></h2>
+
+                <h3>Why we’re built to care</h3>
+
+                <p>
+                  From frog dads carrying tadpoles on their backs to orca grandmothers hunting to feed their grown sons – science journalist Elizabeth Preston goes deep on how caretaking evolved, and what we can learn from it. With warmth and humour, she discovers (unsurprisingly) that humans were never meant to raise children alone: we evolved to do it in cooperative groups.
+                </p>
+                
+
+              </td>
+            </tr>
+          </table>
+
+          <!--[if mso]></td><td width="50%" valign="top"><![endif]-->
+
+          <table width="370" border="0" cellpadding="0" cellspacing="0" align="right" class="fr" data-category="boo" data-item="40815">
+
+            <tr>
+              <td class="boo pt35 pl20" valign="top">
+
+                <img src="book2.jpg" alt="IMG" width="auto" height="250" class="img-b" loading="lazy">
+
+              </td>
+            </tr>
+
+            <tr>
+              <td class="pl20 pr40 pt35 pb10 _a" valign="top">
+
+                <h2><a href="https://bookpile.org/b/9781742237251?ref=DenseDiscovery-408">Living Democracy</a></h2>
+
+                <h3>Rethinking democracy together</h3>
+
+                <p>
+                  Environmentalist and community activist Tim Hollo makes the case for a more participatory form of democracy as a way through the climate crisis, inequality and social division. Drawing on ecological thinking, First Nations knowledge and community action, it’s an optimistic argument for building a future based on mutual aid and collective problem-solving.
+                </p>
+
+              </td>
+            </tr>
+          </table>
+
+          <!--[if mso]></td></tr></table><![endif]-->
+
+          </td>
+        </tr>
+
+        
+
+
+
+      
+
+    
+                
+    
+        <tr>
+          <td class="title" align="left">
+
+            <h1 class="soc">Socials</h1>
+
+          </td>
+        </tr>
+
+
+        <tr>
+          <td class="pt35 pl40 pr40 pb20 mobpb0 soc" align="left"  data-category="soc" data-item="40816">
+
+            
+            <p class="lg">
+              “The robot will do your work for you” and “you can get rich for free” are the same promise and it always means they’re  going to pick your pocket. 
+            </p>
+
+            <h2>
+              <a href="https://circumstances.run/@davidgerard/117243809565603007">@davidgerard@circumstances.run</a>            </h2>
+            <h3>on Mastodon</h3>
+
+          </td>
+        </tr>
+      
+        <tr><td class="spc">&nbsp;</td></tr>
+
+        
+        
+
+
+
+      
+
+
+
+
+
+
+        
+
+        <tr>
+          <td class="title" align="left">
+
+            <h1 class="med">Media</h1>
+
+          </td>
+        </tr>
+
+
+
+
+        <tbody data-category="med" data-item="40817">
+          <tr>
+            <td class="pl40 pr40" align="left">
+
+              <h2><a href="https://thewhitepages.net/p/the-opposite-of-the-apocalypse-is?ref=DenseDiscovery-408">The opposite of the apocalypse is a neighborhood</a></h2>
+              <h3>Read</h3>
+
+            </td>
+
+          </tr>
+
+          <tr>
+            <td align="left">
+
+            <!--[if mso]>
+            <table border="0" cellpadding="0" cellspacing="0" width="100%">
+            <tr><td width="50%" valign="top"><![endif]-->
+
+            <table width="370" border="0" cellpadding="0" cellspacing="0" align="left" class="fr">
+              <tr>
+                <td class="pl40 pb20 pr20 mobpb0" valign="top">
+
+                  <p>
+                   This piece is a lovely little reminder to keep fighting for what makes us human. Garrett Bucks argues that the real threat of AI isn’t extinction, but a ‘malevolent superstructure’ that merges regressive politics with unchecked economic power and human condescension. Instead of despair, we ought to resist by fiercely celebrating our humanity and building interconnected local communities.
+                  </p>
+
+                </td>
+              </tr>
+            </table>
+
+            <!--[if mso]></td><td width="50%" valign="top"><![endif]-->
+
+            <table width="370" border="0" cellpadding="0" cellspacing="0" align="right" class="fr">
+              <tr>
+                <td class="pl20 pb20 pr40 mobpt0" valign="top">
+
+                  <p class="grey">
+                    “Call it conspiracy theorizing or savvy cynicism, but when the foxes hold a press conference about how the hens should do more to regulate them, there’s cause for wariness.”
+                  </p>
+
+                </td>
+              </tr>
+            </table>
+
+            <!--[if mso]></td></tr></table><![endif]-->
+
+            </td>
+          </tr>
+        </tbody>
+
+
+
+
+        <tbody data-category="med" data-item="40818">
+          <tr>
+            <td class="pl40 pr40" align="left">
+
+              <h2><a href="https://www.noemamag.com/how-to-give-everyday-people-a-say-in-ai-governance/?ref=DenseDiscovery-408">How To Give Everyday People A Say In AI Governance</a></h2>
+              <h3>Read</h3>
+
+            </td>
+
+          </tr>
+
+          <tr>
+            <td align="left">
+
+            <!--[if mso]>
+            <table border="0" cellpadding="0" cellspacing="0" width="100%">
+            <tr><td width="50%" valign="top"><![endif]-->
+
+            <table width="370" border="0" cellpadding="0" cellspacing="0" align="left" class="fr">
+              <tr>
+                <td class="pl40 pb20 pr20 mobpb0" valign="top">
+
+                  <p>
+                   If the previous DD issue made you wonder how people can be more involved in the rules around AI, this piece offers an ambitious framework for doing that. Yes, it may sound like wishful thinking given how the broligarchy currently gatekeeps the tech, but leveraging the massive scale of existing AI platforms to consult billions of people is a solution that uniquely suits the tech itself.
+                  </p>
+
+                </td>
+              </tr>
+            </table>
+
+            <!--[if mso]></td><td width="50%" valign="top"><![endif]-->
+
+            <table width="370" border="0" cellpadding="0" cellspacing="0" align="right" class="fr">
+              <tr>
+                <td class="pl20 pb20 pr40 mobpt0" valign="top">
+
+                  <p class="grey">
+                    “Doomism and competitiveness anxiety are terrible organizing principles. ... Whether the danger is an AI slipping out of human hands or sovereignty slipping out of governments’ grasp, the fix is the same: More people, not fewer, need a say before consequential decisions are made.”
+                  </p>
+
+                </td>
+              </tr>
+            </table>
+
+            <!--[if mso]></td></tr></table><![endif]-->
+
+            </td>
+          </tr>
+        </tbody>
+
+
+
+        <tbody data-category="med" data-item="40819">
+          <tr>
+            <td class="pl40 pr40" align="left">
+
+              <h2><a href="https://www.theatlantic.com/family/2026/05/invite-people-over/687363/?ref=DenseDiscovery-408">Fold Laundry With Me!</a></h2>
+              <h3>Read</h3>
+
+            </td>
+
+          </tr>
+
+          <tr>
+            <td align="left">
+
+            <!--[if mso]>
+            <table border="0" cellpadding="0" cellspacing="0" width="100%">
+            <tr><td width="50%" valign="top"><![endif]-->
+
+            <table width="370" border="0" cellpadding="0" cellspacing="0" align="left" class="fr">
+              <tr>
+                <td class="pl40 pb20 pr20 mobpb0" valign="top">
+
+                  <p>
+                    Today’s hyper-curated homes and isolated self-care have made us treat our living spaces like private fortresses. I really like Julie Beck’s encouragement to open our messy homes for more impromptu hangs with friends, instead of meticulously organised dinner parties. After all, lowering our standards of perfection and inviting people into our humility rather than our standard of excellence is what actually builds real closeness. <i>(Paywalled – <a href="https://readwise.io/reader/shared/01m27jgc8854ej4a6atg5p4znd">free archived view</a>)</i>
+                  </p>
+
+                </td>
+              </tr>
+            </table>
+
+            <!--[if mso]></td><td width="50%" valign="top"><![endif]-->
+
+            <table width="370" border="0" cellpadding="0" cellspacing="0" align="right" class="fr">
+              <tr>
+                <td class="pl20 pb20 pr40 mobpt0" valign="top">
+
+                  <p class="grey">
+                    “In 2021, Mark Ellwood wrote for the luxury lifestyle magazine Robb Report about visitor-discouraging design choices the rich were making for their homes – things such as installing long driveways and eliminating doorbells. Ellwood diagnosed them with ‘Big House Small Welcome Syndrome.’”
+                  </p>
+
+                </td>
+              </tr>
+            </table>
+
+            <!--[if mso]></td></tr></table><![endif]-->
+
+            </td>
+          </tr>
+        </tbody>
+
+
+
+        <tbody data-category="med" data-item="40820">
+          <tr>
+            <td class="pl40 pr40" align="left">
+
+              <h2><a href="https://springbett.substack.com/p/the-product-of-the-railways-is-the?ref=DenseDiscovery-408">The product of the railways is the timetable</a></h2>
+              <h3>Read</h3>
+
+            </td>
+
+          </tr>
+
+          <tr>
+            <td align="left">
+
+            <!--[if mso]>
+            <table border="0" cellpadding="0" cellspacing="0" width="100%">
+            <tr><td width="50%" valign="top"><![endif]-->
+
+            <table width="370" border="0" cellpadding="0" cellspacing="0" align="left" class="fr">
+              <tr>
+                <td class="pl40 pb20 pr20 mobpb0" valign="top">
+
+                  <p>
+                    You’ll enjoy this if you’re into trains and transport engineering: Benedict Springbett argues that because train movements across a network are deeply interdependent, the product of the railways is the timetable, not individual tracks or trains. It sounds obvious, but only a few countries understand and execute this master plan well – like the Swiss.
+                  </p>
+
+                </td>
+              </tr>
+            </table>
+
+            <!--[if mso]></td><td width="50%" valign="top"><![endif]-->
+
+            <table width="370" border="0" cellpadding="0" cellspacing="0" align="right" class="fr">
+              <tr>
+                <td class="pl20 pb20 pr40 mobpt0" valign="top">
+
+                  <p class="grey">
+                    “The possibility of an hour’s delay is just accepted as a fact of life on a road trip or a flight, whereas with railways, we start tutting as soon as the train is merely five minutes late. We become irritated because we hold the railways to a high standard of reliability, and we hold them to that standard because they generally fulfil it.”
+                  </p>
+
+                </td>
+              </tr>
+            </table>
+
+            <!--[if mso]></td></tr></table><![endif]-->
+
+            </td>
+          </tr>
+        </tbody>
+
+
+
+
+        <tbody data-category="med" data-item="40821">
+          <tr>
+            <td align="left" class="med">
+
+            <!--[if mso]>
+            <table border="0" cellpadding="0" cellspacing="0" width="100%">
+            <tr><td width="50%" valign="top"><![endif]-->
+
+            <table width="370" border="0" cellpadding="0" cellspacing="0" align="right" class="fr">
+              <tr>
+                <td class="pl20 mobpl0" valign="top">
+
+                <img src="video.gif" alt="IMG" class="img" width="100%" height="auto" loading="lazy">
+
+                </td>
+              </tr>
+            </table>
+
+            <!--[if mso]></td><td width="50%" valign="top"><![endif]-->
+
+            <table width="370" border="0" cellpadding="0" cellspacing="0" align="left" class="fr">
+              <tr>
+                <td class="pt35 pl40 pb20 pr20 mobpb0" valign="top">
+
+                  <h2><a href="https://www.youtube.com/watch?v=2GxlL5-0m_g">Wealth Inequality in America (Updated 2026)</a></h2>
+                  <h3>Watch</h3>
+                  
+                  <p>Thirteen years after the YouTube channel @politizane published an animated explainer on American wealth inequality that went viral, they are back with an update comparing how unequal people think the US is with how unequal it really is. We all know the numbers are grim, but the way they illustrate and explain them is still eye-opening.</p>
+
+                </td>
+              </tr>
+            </table>
+
+            <!--[if mso]></td></tr></table><![endif]-->
+
+            </td>
+          </tr>
+        </tbody>
+        <tr><td class="spc">&nbsp;</td></tr>
+
+
+
+
+      
+        
+        
+
+
+        
+
+
+
+        
+        <tr>
+            <td class="title" align="left">
+
+              <h1 class="ins">Inspiration</h1>
+
+            </td>
+          </tr>
+
+          <tr>
+            <td align="left" class="ins" data-category="ins" data-item="40822">
+
+            <!--[if mso]>
+            <table border="0" cellpadding="0" cellspacing="0" width="100%">
+            <tr><td width="60%" valign="top"><![endif]-->
+
+            <table width="444" border="0" cellpadding="0" cellspacing="0" align="left" class="fr">
+              <tr>
+                <td class="pr20 mobpr0" valign="top">
+                  <!-- use td.lined for white images -->
+
+                  <p class="mb0">
+                    <!-- use .img-l to separate images -->
+                    <img src="paint1.jpg" alt="IMG" width="100%" height="auto" class="img " loading="lazy">
+                    <img src="paint2.jpg" alt="IMG" width="100%" height="auto" class="img" loading="lazy">
+                  </p>
+
+                </td>
+              </tr>
+            </table>
+
+            <!--[if mso]></td><td width="40%" valign="top"><![endif]-->
+
+            <table width="296" border="0" cellpadding="0" cellspacing="0" align="right" class="fr">
+              <tr>
+              <td class="pt35 pr40 pl20 _a" valign="top">
+                 
+              
+                <p>
+                  The work by South Korean illustrator and painter <a href="https://www.instagram.com/sseongryul/"><b>Seong Ryul</b></a> depicts sunny, slightly dreamlike landscapes and fragments from everyday life. They often show fleeting moments that disappear or change shape. Look at those cloud formations!
+
+                                  </p>
+
+
+
+                </td>
+              </tr>
+            </table>
+
+            <!--[if mso]></td></tr></table><![endif]-->
+
+            </td>
+          </tr>
+
+          <tr>
+            <td align="left" class="ins" data-category="ins" data-item="40823">
+
+            <!--[if mso]>
+            <table border="0" cellpadding="0" cellspacing="0" width="100%">
+            <tr><td width="60%" valign="top"><![endif]-->
+
+            <table width="444" border="0" cellpadding="0" cellspacing="0" align="left" class="fr">
+              <tr>
+                <td class="pr20 mobpr0" valign="top">
+                  <!-- use td.lined for white images -->
+
+                  <p class="mb0">
+                    <!-- use .img-l to separate images -->
+                    <img src="art1.jpg" alt="IMG" width="100%" height="auto" class="img" loading="lazy">
+                    <img src="art2.jpg" alt="IMG" width="100%" height="auto" class="img" loading="lazy">
+                  </p>
+
+                </td>
+              </tr>
+            </table>
+
+            <!--[if mso]></td><td width="40%" valign="top"><![endif]-->
+
+            <table width="296" border="0" cellpadding="0" cellspacing="0" align="right" class="fr">
+              <tr>
+              <td class="pt35 pr40 pl20 _a" valign="top">
+                 
+              
+                <p>
+                  Combining art practices into a new medium I’ve never seen before: <a href="https://www.instagram.com/noshii/"><b>Nosheen Iqbal</b></a> builds geometric reliefs from wooden panels, semi-precious beads and layered thread, drawing on her Pakistani heritage and the ornamental logic of Islamic architecture.
+
+                                  </p>
+
+
+
+                </td>
+              </tr>
+            </table>
+
+            <!--[if mso]></td></tr></table><![endif]-->
+
+            </td>
+          </tr>
+          
+
+          <tr>
+            <td align="left" class="ins" data-category="ins" data-item="40824">
+
+            <!--[if mso]>
+            <table border="0" cellpadding="0" cellspacing="0" width="100%">
+            <tr><td width="60%" valign="top"><![endif]-->
+
+            <table width="444" border="0" cellpadding="0" cellspacing="0" align="left" class="fr">
+              <tr>
+                <td class="pr20 mobpr0" valign="top">
+                  <!-- use td.lined for white images -->
+
+                  <p class="mb0">
+                    <!-- use .img-l to separate images -->
+                    <img src="font1.jpg" alt="IMG" width="100%" height="auto" class="img" loading="lazy">
+                    <img src="font2.jpg" alt="IMG" width="100%" height="auto" class="img" loading="lazy">
+                  </p>
+
+                </td>
+              </tr>
+            </table>
+
+            <!--[if mso]></td><td width="40%" valign="top"><![endif]-->
+
+            <table width="296" border="0" cellpadding="0" cellspacing="0" align="right" class="fr">
+              <tr>
+              <td class="pt35 pr40 pl20 _a" valign="top">
+                 
+              
+                <p>
+                  <i>Font of the week:</i> <a href="https://www.nan.xyz/fonts/nan-gothic/?ref=DenseDiscovery-408"><b>Nan Gothic</b></a> is a warm, unpretentious take on the American gothics of the mid-20th century, keeping their quirks and sturdiness but adding sweeping tails on the /t and /y and 20° italics and backslants.
+
+                                  </p>
+
+
+
+                </td>
+              </tr>
+            </table>
+
+            <!--[if mso]></td></tr></table><![endif]-->
+
+            </td>
+          </tr>
+
+
+          <tr><td class="spc">&nbsp;</td></tr>
+
+          
+  
+
+
+
+
+
+
+
+
+        
+        
+        <tr>
+          <td class="title" align="left">
+
+            <h1>Classifieds</h1>
+
+          </td>
+        </tr>
+
+
+        <tr>
+          <td align="left">
+
+          <!--[if mso]>
+          <table border="0" cellpadding="0" cellspacing="0" width="100%">
+          <tr><td width="60%" valign="top"><![endif]-->
+
+          <table width="444" border="0" cellpadding="0" cellspacing="0" align="left" class="fr">
+            <tr>
+              <td valign="top" class="pl40 pb20 pr20">
+                
+                <p data-category="cla" data-item="40825">
+
+                  Break free from the attention economy & reclaim your creative integrity! <a href="https://offthegrid.fun/attention?ref=DenseDiscovery-408"><b>Your Attention is Sacred</b></a> is a 100-page manifesto for rebelling against social media. Get the ebook for $5 with code <span class="code">DENSE</span>.
+                  
+                                  </p>
+                
+                <p class="cla"></p>
+
+                <p data-category="cla" data-item="40826">
+                
+                  Never lose the story behind a relationship: <a href="https://www.persodex.com/?ref=DenseDiscovery-408"><b>Persodex</b></a> for iOS captures conversations, personal details and unforgettable moments – because great relationships are built on the little things. 
+                
+                                  </p>
+                
+                <p class="cla"></p>
+
+                <p data-category="cla" data-item="40827">
+                  
+                  Distilled from 3K+ career coaching sessions, <a href="https://www.coherence.studio/fluid?ref=DenseDiscovery-408"><b>The Fluid Career</b></a> is a playbook for multi-passionates on how to build a thriving, diversified career in a changing world.
+
+                                  </p>
+                
+                <p class="cla"></p>
+
+                <p data-category="cla" data-item="40828">
+                  
+                  Your coffee’s new sidekick: <a href="https://minicrossword.com/?utm_source=densediscovery&utm_medium=newsletter&utm_campaign=densediscovery-408"><b>MiniCrossword.com</b></a>. A free mini crossword daily, edited by NYT constructor Jeff Chen. ~2 minutes, clever clues, no app, no paywall. Solve today’s now. 
+                
+                                  </p>
+
+
+              </td>
+            </tr>
+          </table>
+
+          <!--[if mso]></td><td width="40%" valign="top"><![endif]-->
+
+          <table width="296" border="0" cellpadding="0" cellspacing="0" align="right" class="fr">
+            <tr>
+              <td class="pl20 pb20 pr40 mobpt0" valign="top">
+
+                <p class="grey">
+                  Classifieds are paid ads that support DD and are seen by 36,000+ subscribers each week. <a href="https://dnse.me/advertise/"><b>Book yours here.</b></a>
+                  </p>
+
+              </td>
+            </tr>
+          </table>
+
+          <!--[if mso]></td></tr></table><![endif]-->
+
+          </td>
+        </tr>
+
+        
+        
+
+
+        
+
+
+
+
+
+        
+
+        <tr>
+          <td class="title" align="left">
+
+            <h1 class="num">Numbers</h1>
+
+          </td>
+        </tr>
+
+  
+        <tr>
+          <td align="left" class="num">
+
+          <!--[if mso]>
+          <table border="0" cellpadding="0" cellspacing="0" width="100%">
+          <tr><td width="50%" valign="top"><![endif]-->
+
+          <table width="370" border="0" cellpadding="0" cellspacing="0" align="left" class="fr">
+            <tr>
+              <td class="pl40 pt35 pb20 pr20" valign="top"  data-category="num" data-item="40829">
+
+                <p class="xl">80.2</p>
+
+                <p>
+                  After a scorching summer, air conditioner sales are up <a href="https://asia.nikkei.com/spotlight/environment/climate-change/asian-air-con-makers-prepare-for-hotter-germany-after-bumper-summer?ref=DenseDiscovery-408">80.2%</a> year on year in Germany, with portable unit sales up 112.9%. Currently, less than 20% of German homes have air conditioning. 
+                                  </p>
+
+              </td>
+            </tr>
+          </table>
+
+          <!--[if mso]></td><td width="50%" valign="top"><![endif]-->
+
+          <table width="370" border="0" cellpadding="0" cellspacing="0" align="right" class="fr">
+            <tr>
+              <td class="pl20 pt35 pb20 pr40 mobpt0 mobpb0" valign="top" data-category="num" data-item="40830">
+
+                <p class="xl">1.16</p>
+
+                <p>
+                  The number of public EV chargers in the EU has grown almost eightfold since 2020, reaching <a href="https://theicct.org/publication/ev-transition-check-2026?ref=DenseDiscovery-408">1.16</a> million by June 2026, indicating that there are sufficient public chargers for the current EU fleet on the road. 
+                                  </p>
+
+              </td>
+            </tr>
+          </table>
+
+          <!--[if mso]></td></tr></table><![endif]-->
+
+          </td>
+        </tr>
+
+
+        <tr><td class="spc">&nbsp;</td></tr>
+
+        
+
+
+                
+    
+        
+        <tr>
+          <td class="title" align="left">
+
+            <h1 class="soc">Socials</h1>
+
+          </td>
+        </tr>
+
+
+        <tr>
+          <td class="pt35 pl40 pr40 pb20 mobpb0 soc" align="left"  data-category="soc" data-item="40831">
+
+            <p class="lg">
+              My spouse saying to the four year old about his brother, “He is telling you about it because he’s excited, not because he thinks you don’t know.”<br>
+              And that, my friends, is also a lesson I need to hear.
+              </p>
+
+            <h2>
+              <a href="https://substack.com/@cassiemannesmurray/note/c-279587876">@cassiemannesmurray</a>            </h2>
+            <h3>on Substack</h3>
+
+          </td>
+        </tr>
+      
+        <tr><td class="spc">&nbsp;</td></tr>
+
+        
+                        
+        
+
+
+
+        
+
+        <tr>
+          <td class="title" align="left">
+
+            <h1 class="moo">Mood</h1>
+
+          </td>
+        </tr>
+
+  
+        <tr>
+          <td align="left" class="moo"  data-category="moo" data-item="40832">
+
+          <!--[if mso]>
+          <table border="0" cellpadding="0" cellspacing="0" width="100%">
+          <tr><td width="60%" valign="top"><![endif]-->
+
+          <table width="444" border="0" cellpadding="0" cellspacing="0" align="left" class="fr">
+            <tr>
+              <td class="pr20 mobpr0" valign="top">
+
+                <p class="mb0">
+                  <img src="gif.gif" alt="IMG" width="100%" height="auto" class="img" loading="lazy">
+                </p>
+
+              </td>
+            </tr>
+          </table>
+
+          <!--[if mso]></td><td width="40%" valign="top"><![endif]-->
+
+          <table width="296" border="0" cellpadding="0" cellspacing="0" align="right" class="fr">
+            <tr>
+              <td class="pl20 pt35 pb5 pr40 _a" valign="top">
+
+                <p class="grey">
+                  <span class="lg">Post-crash advice.</span>
+                                  </p>
+
+
+              </td>
+            </tr>
+          </table>
+
+          <!--[if mso]></td></tr></table><![endif]-->
+
+          </td>
+        </tr>
+
+
+        <tr><td class="spc">&nbsp;</td></tr>
+
+        
+
+
+
+
+
+
+
+      </table>
+
+    </td>
+  </tr>
+
+  <tr><td class="spc">&nbsp;</td></tr>
+  <tr><td class="spc">&nbsp;</td></tr>
+
+</table>
+
+
+
+
+<table border="0" width="100%" cellpadding="0" cellspacing="0" bgcolor="#FFFFFF">
+
+  <tr>
+    <td align="center" valign="top" class="grey" style="border-bottom: 5px solid #FFFFFF;">
+
+      <table border="0" width="740" cellpadding="0" cellspacing="0" class="footer mobpt0">
+
+
+
+        <tr>
+          <td align="left">
+
+          <!--[if mso]>
+          <table border="0" cellpadding="0" cellspacing="0" width="100%">
+          <tr><td width="60%" valign="top"><![endif]-->
+
+          <table width="444" border="0" cellpadding="0" cellspacing="0" align="left" class="fr">
+            <tr>
+              <td class="pr20 pl40 pb15 mobpb0" valign="top">
+
+                <p class="lg mb20"><b>Thanks for reading. <br>Enjoyed it? Please share.</b></p>
+
+              </td>
+            </tr>
+          </table>
+
+          <!--[if mso]></td><td width="40%" valign="top"><![endif]-->
+
+          <table width="296" border="0" cellpadding="0" cellspacing="0" align="right" class="fr">
+            <tr>
+              <td class="pl20 pr40 pb15" valign="top">
+
+                <p>
+                  <a href="https://dnse.me/408" class="btn">View&nbsp;online/share&nbsp;&rarr;</a>
+                </p>
+
+              </td>
+            </tr>
+          </table>
+
+          <!--[if mso]></td></tr></table><![endif]-->
+
+          </td>
+        </tr>
+
+
+
+        <tr>
+          <td align="left">
+
+          <!--[if mso]>
+          <table border="0" cellpadding="0" cellspacing="0" width="100%">
+          <tr><td width="60%" valign="top"><![endif]-->
+
+          <table width="444" border="0" cellpadding="0" cellspacing="0" align="left" class="fr">
+            <tr>
+              <td class="pr20 pl40" valign="top">
+
+                <p>
+                  DD is sent with <a href="https://emailoctopus.com/?utm_source=newsletter&utm_medium=sponsorship&utm_campaign=dense_discovery">EmailOctopus</a> and hosted on <a href="https://tidd.ly/40AWoJP">Krystal</a>.
+                </p>
+
+                <p>
+                  We respectfully acknowledge the <a href="https://en.wikipedia.org/wiki/Wurundjeri">Wurundjeri Woi-Wurrung people</a> of the Kulin Nation as sovereign custodians of the lands and waters on which we work, live and learn. We express gratitude for our connection to one of the oldest continuing cultures on earth.
+                </p>
+                
+                <p>
+                  As a modest climate offset, we plant <a href="https://carbonpositiveaustralia.org.au/?ref=DenseDiscovery">one native Australian tree</a> for every issue sent.
+                </p>
+
+                <p>
+                  Issue 408 was first published on September 29 2026 by Offscreen Media.
+                </p>
+                
+
+              </td>
+            </tr>
+          </table>
+
+          <!--[if mso]></td><td width="40%" valign="top"><![endif]-->
+
+          <table width="296" border="0" cellpadding="0" cellspacing="0" align="right" class="fr">
+            <tr>
+              <td class="pl20 pr40" valign="top">
+                
+                <p class="grey">
+
+
+                  
+                    <b>Ways to support</b><br>
+                    <a href="https://dnse.me/advertise/">Advertise in DD</a>
+                    <br>
+                    <a href="https://dnse.me/friends">Become a Friend</a>
+
+
+                  
+
+                </p>
+
+
+              </td>
+            </tr>
+          </table>
+
+          <!--[if mso]></td></tr></table><![endif]-->
+
+          </td>
+        </tr>
+
+      </table>
+
+
+      <tr><td style="background: #e26351">&nbsp;</td></tr>
+
+
+
+    </td>
+  </tr>
+</table>
+
+
+
+<script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/v31edd6df95cf4e85bb4c19e7a9bdbcba1788362987495" integrity="sha512-iIg7k2xntmwu6/uSb5tpc/hySgZc4eoL31yB29W6tJFo2akwjPWcEqnCEdJvGexCL0KEQwVYv5BlowfhVz26hg==" data-cf-beacon='{"version":"2024.11.0","token":"b8aa7fb7134f42db9ee85dcaecf682bc","r":1,"spa":2}' crossorigin="anonymous"></script>
+</body>
+</html>

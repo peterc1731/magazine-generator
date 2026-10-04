@@ -118,6 +118,7 @@ def _rehost_images(
     for img in soup.find_all("img"):
         src = img.get("src")
         if not src or not src.startswith(("http://", "https://")):
+            img.decompose()  # relative/data/missing src — nothing an e-reader could load
             continue
 
         image_bytes, media_type = _fetch_image(client, src)
