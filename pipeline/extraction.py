@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import re
 from dataclasses import dataclass
 from datetime import datetime
 from urllib.parse import urljoin
@@ -101,6 +102,12 @@ def extract_newsletter(
     for comment in soup.find_all(string=lambda s: isinstance(s, Comment)):
         comment.extract()
     title = soup.title.get_text(" ", strip=True) if soup.title else "Untitled"
+    # Before removal: the date often lives in a footer that's stripped below.
+    published_at = _find_published_date(soup)
+    if published_at is not None:
+        # Every issue of a newsletter tends to share a near-identical <title>,
+        # so the date is what tells them apart in the contents.
+        title = f"{title} · {published_at.day} {published_at:%b %Y}"
     for selector in remove_selectors or []:
         for element in soup.select(selector):
             element.decompose()
@@ -115,10 +122,48 @@ def extract_newsletter(
     return ExtractedArticle(
         title=title or "Untitled",
         author=None,
-        published_at=None,
+        published_at=published_at,
         plaintext=plaintext,
         cleaned_html=cleaned_html,
     )
+
+
+_PUBLISHED_PATTERN = re.compile(
+    r"published\s+(?:on\s+)?([A-Z][a-z]+\.?\s+\d{1,2}(?:st|nd|rd|th)?,?\s+\d{4})"
+)
+_DATE_META_NAMES = ("article:published_time", "date", "pubdate", "publish-date", "dc.date")
+
+
+def _find_published_date(soup: BeautifulSoup) -> datetime | None:
+    """A date from standard <meta>/<time> markup, else from a "published on
+    September 29 2026"-style phrase in the text (Dense Discovery's footer)."""
+    for meta in soup.find_all("meta"):
+        name = (meta.get("property") or meta.get("name") or "").lower()
+        if name in _DATE_META_NAMES and meta.get("content"):
+            parsed = _parse_iso_date(meta["content"])
+            if parsed:
+                return parsed
+    time_tag = soup.find("time", attrs={"datetime": True})
+    if time_tag:
+        parsed = _parse_iso_date(time_tag["datetime"])
+        if parsed:
+            return parsed
+    match = _PUBLISHED_PATTERN.search(soup.get_text(" "))
+    if match:
+        text = re.sub(r"(\d)(st|nd|rd|th)", r"\1", match.group(1)).replace(",", "").replace(".", "")
+        for fmt in ("%B %d %Y", "%b %d %Y"):
+            try:
+                return datetime.strptime(" ".join(text.split()), fmt)
+            except ValueError:
+                continue
+    return None
+
+
+def _parse_iso_date(value: str) -> datetime | None:
+    try:
+        return datetime.strptime(value.strip()[:10], "%Y-%m-%d")
+    except ValueError:
+        return None
 
 
 def _collect_blocks(node: Tag) -> list[Tag]:

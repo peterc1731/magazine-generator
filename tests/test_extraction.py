@@ -1,3 +1,4 @@
+from datetime import datetime
 from pathlib import Path
 
 from bs4 import BeautifulSoup
@@ -68,7 +69,7 @@ def test_newsletter_keeps_sections_in_order_without_ads() -> None:
     result = _dense_discovery_408()
 
     assert result is not None
-    assert result.title == "Dense Discovery – Issue 408"
+    assert result.title == "Dense Discovery – Issue 408 · 29 Sep 2026"
     # Section headings (h1 in the email → h2 under the chapter title), in
     # order, minus Sponsor/Classifieds whose content was removed.
     assert _headings(result.cleaned_html, "h2") == [
@@ -124,3 +125,28 @@ def test_newsletter_strips_layout_attributes_and_tables() -> None:
     assert "<table" not in result.cleaned_html
     assert "<td" not in result.cleaned_html
     assert "class=" not in result.cleaned_html
+
+
+def test_newsletter_takes_published_date_from_footer_before_removing_it() -> None:
+    result = _dense_discovery_408()  # the footer is in the removed selectors
+
+    assert result is not None
+    assert result.published_at == datetime(2026, 9, 29)
+    assert "first published on" not in result.plaintext
+
+
+def test_newsletter_prefers_meta_date_and_leaves_title_alone_without_one() -> None:
+    body = "<body><h1>Section</h1><p>Some content.</p></body>"
+    with_meta = (
+        '<html><head><title>Weekly</title><meta property="article:published_time" '
+        f'content="2026-10-02T08:00:00Z"></head>{body}</html>'
+    )
+    without = f"<html><head><title>Weekly</title></head>{body}</html>"
+
+    dated = extract_newsletter(with_meta, "https://example.com/1")
+    undated = extract_newsletter(without, "https://example.com/2")
+
+    assert dated is not None and dated.published_at == datetime(2026, 10, 2)
+    assert dated.title == "Weekly · 2 Oct 2026"
+    assert undated is not None and undated.published_at is None
+    assert undated.title == "Weekly"
