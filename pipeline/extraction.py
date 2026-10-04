@@ -104,10 +104,6 @@ def extract_newsletter(
     title = soup.title.get_text(" ", strip=True) if soup.title else "Untitled"
     # Before removal: the date often lives in a footer that's stripped below.
     published_at = _find_published_date(soup)
-    if published_at is not None:
-        # Every issue of a newsletter tends to share a near-identical <title>,
-        # so the date is what tells them apart in the contents.
-        title = f"{title} · {published_at.day} {published_at:%b %Y}"
     for selector in remove_selectors or []:
         for element in soup.select(selector):
             element.decompose()
