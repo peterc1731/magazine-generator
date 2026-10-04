@@ -19,6 +19,9 @@ jobs:
 
   deploy:
     needs: test
+    # Skip (rather than fail) until deploy/bootstrap.sh has been run and its
+    # repository variables set.
+    if: vars.GCP_PROJECT_ID != ''
     runs-on: ubuntu-latest
     permissions:
       contents: read
