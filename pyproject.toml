@@ -21,7 +21,7 @@ dependencies = [
     "jinja2>=3.1.6",
     "python-multipart>=0.0.32",
     "psycopg[binary]>=3.2",
-    "google-auth[urllib3]>=2.30",
+    "google-auth[requests]>=2.30",
 ]
 
 [dependency-groups]

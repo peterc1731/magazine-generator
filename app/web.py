@@ -1,4 +1,5 @@
 import html
+import logging
 from pathlib import Path
 
 from fastapi import APIRouter, Depends, Form, HTTPException, Request
@@ -22,6 +23,8 @@ from pipeline.settings_store import (
     set_interest_profile,
     set_relevance_threshold,
 )
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/ui", tags=["web"], dependencies=[Depends(require_auth)])
 templates = Jinja2Templates(directory=str(Path(__file__).parent / "templates"))
@@ -238,6 +241,7 @@ def save_settings(
 def list_runs(
     request: Request,
     started: bool = False,
+    start_failed: bool = False,
     db: Session = Depends(get_db),
     settings: Settings = Depends(get_settings),
 ) -> HTMLResponse:
@@ -245,6 +249,7 @@ def list_runs(
     context = {
         "runs": runs,
         "started": started,
+        "start_failed": start_failed,
         "runs_in_background": bool(settings.pipeline_job_name),
     }
     return templates.TemplateResponse(request, "runs/list.html", context)
@@ -258,7 +263,11 @@ def run_now(settings: Settings = Depends(get_settings)) -> RedirectResponse:
     (ARCHITECTURE.md §6) — fine at this project's scale; no background job
     queue needed for an occasional manual trigger."""
     if settings.pipeline_job_name:
-        start_pipeline_job(settings.pipeline_job_name)
+        try:
+            start_pipeline_job(settings.pipeline_job_name)
+        except Exception:  # noqa: BLE001 — show it on the page rather than a bare 500
+            logger.exception("Failed to start pipeline job %s", settings.pipeline_job_name)
+            return RedirectResponse(url="/ui/runs?start_failed=true", status_code=303)
         return RedirectResponse(url="/ui/runs?started=true", status_code=303)
     execute_run()
     return RedirectResponse(url="/ui/runs", status_code=303)

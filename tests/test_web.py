@@ -386,6 +386,16 @@ def test_run_now_starts_cloud_run_job_when_configured(
     assert not mock_execute_run.called
 
 
+@patch("app.web.start_pipeline_job", side_effect=RuntimeError("no credentials"))
+def test_run_now_shows_error_when_job_start_fails(
+    mock_start_job: MagicMock, cloud_run_client: TestClient
+) -> None:
+    response = cloud_run_client.post("/ui/runs/run-now")
+
+    assert response.status_code == 200
+    assert "start the pipeline job" in response.text
+
+
 def test_runs_list_shows_started_message(cloud_run_client: TestClient) -> None:
     response = cloud_run_client.get("/ui/runs?started=true")
 

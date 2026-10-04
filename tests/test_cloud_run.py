@@ -21,3 +21,10 @@ def test_start_pipeline_job_posts_run_with_bearer_token(mock_default: MagicMock)
 
     assert credentials.refresh.called
     assert route.calls[0].request.headers["Authorization"] == "Bearer access-token"
+
+
+def test_requests_transport_is_installed() -> None:
+    # google.auth.default() silently skips the Cloud Run metadata server
+    # unless google.auth.transport.requests imports — the cause of a
+    # production "default credentials were not found" error.
+    import google.auth.transport.requests  # noqa: F401

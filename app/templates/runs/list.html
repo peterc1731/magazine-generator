@@ -2,6 +2,8 @@
 {% block title %}Runs — Magazine Generator{% endblock %}
 {% block content %}
 <h1>Runs</h1>
+{% if start_failed %}<p class="error">Couldn't start the pipeline job — see the web service's logs in
+  Cloud Run for the error.</p>{% endif %}
 {% if started %}<p class="muted">Run started — refresh this page to see it appear and finish.</p>{% endif %}
 <form method="post" action="/ui/runs/run-now">
   <button type="submit">Run now</button>
