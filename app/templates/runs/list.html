@@ -2,9 +2,14 @@
 {% block title %}Runs — Magazine Generator{% endblock %}
 {% block content %}
 <h1>Runs</h1>
+{% if started %}<p class="muted">Run started — refresh this page to see it appear and finish.</p>{% endif %}
 <form method="post" action="/ui/runs/run-now">
   <button type="submit">Run now</button>
+  {% if runs_in_background %}
+  <span class="muted">Starts the pipeline job in the background.</span>
+  {% else %}
   <span class="muted">Blocks until the run finishes — may take a while.</span>
+  {% endif %}
 </form>
 <table>
   <tr><th>Started</th><th>Status</th><th>Found</th><th>Included</th><th>Excluded</th><th>Errors</th></tr>

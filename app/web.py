@@ -7,6 +7,7 @@ from fastapi.templating import Jinja2Templates
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
+from app.cloud_run import start_pipeline_job
 from app.config import Settings, get_settings
 from app.db import get_db
 from app.models import Issue, JobRun, Source, SourceType
@@ -122,13 +123,15 @@ def test_fetch_source(
     source_id: str, db: Session = Depends(get_db), settings: Settings = Depends(get_settings)
 ) -> HTMLResponse:
     """Fetches from the source without persisting anything or moving its
-    cursor — a preview, not a real ingest (PRD.md §7.1)."""
+    cursor — a preview, not a real ingest (PRD.md §7.1). The one exception
+    is a refreshed X token pair, which has to be saved either way: X
+    invalidates the old refresh token as soon as it's used."""
     source = db.get(Source, source_id)
     if source is None:
         raise HTTPException(status_code=404, detail="Source not found")
 
     try:
-        connector = build_connector(source, settings)
+        connector = build_connector(source, settings, db)
         result = connector.fetch_since(source.last_cursor)
     except Exception as exc:  # noqa: BLE001 — surfacing the failure to the UI is the point
         return HTMLResponse(f'<p class="error">Failed: {html.escape(str(exc))}</p>')
@@ -169,11 +172,14 @@ def _config_from_form(
 
 
 @router.get("/settings", response_class=HTMLResponse)
-def settings_page(request: Request, db: Session = Depends(get_db)) -> HTMLResponse:
+def settings_page(
+    request: Request, db: Session = Depends(get_db), settings: Settings = Depends(get_settings)
+) -> HTMLResponse:
     context = {
         "interest_profile": get_interest_profile(db),
         "relevance_threshold": get_relevance_threshold(db),
         "cron_expression": get_cron_expression(db),
+        "schedule_managed_externally": bool(settings.pipeline_job_name),
         "saved": False,
     }
     return templates.TemplateResponse(request, "settings.html", context)
@@ -184,16 +190,21 @@ def save_settings(
     request: Request,
     interest_profile: str = Form(""),
     relevance_threshold: float = Form(...),
-    cron_expression: str = Form(...),
+    cron_expression: str | None = Form(None),
     db: Session = Depends(get_db),
+    settings: Settings = Depends(get_settings),
 ) -> HTMLResponse:
     set_interest_profile(db, interest_profile)
     set_relevance_threshold(db, relevance_threshold)
-    set_cron_expression(db, cron_expression)
+    # On Cloud Run the schedule lives in Cloud Scheduler (deploy/terraform),
+    # so the form doesn't offer the field and there's nothing to save.
+    if cron_expression is not None and not settings.pipeline_job_name:
+        set_cron_expression(db, cron_expression)
     context = {
         "interest_profile": interest_profile,
         "relevance_threshold": relevance_threshold,
-        "cron_expression": cron_expression,
+        "cron_expression": get_cron_expression(db),
+        "schedule_managed_externally": bool(settings.pipeline_job_name),
         "saved": True,
     }
     return templates.TemplateResponse(request, "settings.html", context)
@@ -203,16 +214,31 @@ def save_settings(
 
 
 @router.get("/runs", response_class=HTMLResponse)
-def list_runs(request: Request, db: Session = Depends(get_db)) -> HTMLResponse:
+def list_runs(
+    request: Request,
+    started: bool = False,
+    db: Session = Depends(get_db),
+    settings: Settings = Depends(get_settings),
+) -> HTMLResponse:
     runs = db.execute(select(JobRun).order_by(JobRun.started_at.desc()).limit(50)).scalars().all()
-    return templates.TemplateResponse(request, "runs/list.html", {"runs": runs})
+    context = {
+        "runs": runs,
+        "started": started,
+        "runs_in_background": bool(settings.pipeline_job_name),
+    }
+    return templates.TemplateResponse(request, "runs/list.html", context)
 
 
 @router.post("/runs/run-now")
-def run_now() -> RedirectResponse:
-    """Blocks until the run finishes (ARCHITECTURE.md §6) — fine at this
-    project's scale; no background job queue needed for an occasional
-    manual trigger."""
+def run_now(settings: Settings = Depends(get_settings)) -> RedirectResponse:
+    """On Cloud Run, starts an execution of the pipeline job and returns
+    immediately — the run shows up in the list once the job creates its
+    `job_runs` row. Everywhere else, blocks until the run finishes
+    (ARCHITECTURE.md §6) — fine at this project's scale; no background job
+    queue needed for an occasional manual trigger."""
+    if settings.pipeline_job_name:
+        start_pipeline_job(settings.pipeline_job_name)
+        return RedirectResponse(url="/ui/runs?started=true", status_code=303)
     execute_run()
     return RedirectResponse(url="/ui/runs", status_code=303)
 

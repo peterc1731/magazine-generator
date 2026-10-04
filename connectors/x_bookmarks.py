@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime
 
@@ -19,6 +20,10 @@ class XBookmarksConfig:
     client_secret: str | None = None
     refresh_token: str | None = None
     max_results: int = 100
+    # Called with (access_token, refresh_token) after a refresh. X rotates
+    # the refresh token on every use, so the new pair has to be persisted
+    # somewhere durable or the next run can't authenticate.
+    on_tokens_refreshed: Callable[[str, str | None], None] | None = None
 
 
 class XBookmarksConnector:
@@ -99,6 +104,10 @@ class XBookmarksConnector:
         )
         self._config.access_token = payload["access_token"]
         self._config.refresh_token = payload.get("refresh_token", self._config.refresh_token)
+        if self._config.on_tokens_refreshed is not None:
+            self._config.on_tokens_refreshed(
+                self._config.access_token, self._config.refresh_token
+            )
 
 
 def _first_line(text: str) -> str:

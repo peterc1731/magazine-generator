@@ -98,3 +98,7 @@ def downgrade() -> None:
     op.drop_table('job_runs')
     op.drop_table('issues')
     # ### end Alembic commands ###
+    # Postgres keeps the native enum types after their tables are dropped,
+    # which would break a later re-upgrade (no-op on SQLite).
+    for enum_name in ('articlestatus', 'jobstatus', 'sourcetype'):
+        sa.Enum(name=enum_name).drop(op.get_bind(), checkfirst=True)

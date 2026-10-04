@@ -324,6 +324,67 @@ def test_run_now_triggers_execute_run_and_redirects(
     assert mock_execute_run.called
 
 
+@pytest.fixture
+def cloud_run_client(session_factory):
+    def override_get_db():
+        db = session_factory()
+        try:
+            yield db
+        finally:
+            db.close()
+
+    app.dependency_overrides[get_db] = override_get_db
+    app.dependency_overrides[get_settings] = lambda: Settings(
+        _env_file=None, pipeline_job_name="projects/p/locations/r/jobs/pipeline"
+    )
+    yield TestClient(app)
+    app.dependency_overrides.clear()
+
+
+@patch("app.web.execute_run")
+@patch("app.web.start_pipeline_job")
+def test_run_now_starts_cloud_run_job_when_configured(
+    mock_start_job: MagicMock, mock_execute_run: MagicMock, cloud_run_client: TestClient
+) -> None:
+    response = cloud_run_client.post("/ui/runs/run-now", follow_redirects=False)
+
+    assert response.status_code == 303
+    assert response.headers["location"] == "/ui/runs?started=true"
+    mock_start_job.assert_called_once_with("projects/p/locations/r/jobs/pipeline")
+    assert not mock_execute_run.called
+
+
+def test_runs_list_shows_started_message(cloud_run_client: TestClient) -> None:
+    response = cloud_run_client.get("/ui/runs?started=true")
+
+    assert "Run started" in response.text
+
+
+def test_settings_hides_schedule_when_managed_by_cloud_scheduler(
+    cloud_run_client: TestClient,
+) -> None:
+    response = cloud_run_client.get("/ui/settings")
+
+    assert 'name="cron_expression"' not in response.text
+    assert "Cloud Scheduler" in response.text
+
+
+def test_settings_save_ignores_schedule_when_managed_by_cloud_scheduler(
+    cloud_run_client: TestClient, session_factory
+) -> None:
+    response = cloud_run_client.post(
+        "/ui/settings",
+        data={"interest_profile": "AI", "relevance_threshold": "6", "cron_expression": "* * * * *"},
+    )
+
+    assert response.status_code == 200
+    from pipeline import settings_store
+
+    with session_factory() as db:
+        assert settings_store.get_interest_profile(db) == "AI"
+        assert settings_store.get_cron_expression(db) == settings_store.DEFAULT_CRON_EXPRESSION
+
+
 def test_issues_list_empty(client: TestClient) -> None:
     response = client.get("/ui/issues")
 

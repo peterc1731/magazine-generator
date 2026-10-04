@@ -24,6 +24,9 @@ COPY pipeline ./pipeline
 COPY alembic ./alembic
 COPY alembic.ini ./
 COPY scripts ./scripts
+# pyproject.toml declares README.md as the package readme; hatchling
+# refuses to build the project without it.
+COPY README.md ./
 RUN uv sync --locked --no-dev
 
 COPY docker/entrypoint.sh /entrypoint.sh

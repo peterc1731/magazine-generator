@@ -59,7 +59,7 @@ def _fetch_and_ingest_sources(db: Session, settings: Settings, errors: list[str]
 
     for source in sources:
         try:
-            connector = build_connector(source, settings)
+            connector = build_connector(source, settings, db)
             result = connector.fetch_since(source.last_cursor)
         except Exception as exc:  # noqa: BLE001 — per-source isolation, see ARCHITECTURE §6
             errors.append(f"{source.name}: {exc}")

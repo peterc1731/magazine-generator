@@ -6,9 +6,11 @@ from pipeline.settings_store import (
     get_cron_expression,
     get_interest_profile,
     get_relevance_threshold,
+    get_x_tokens,
     set_cron_expression,
     set_interest_profile,
     set_relevance_threshold,
+    set_x_tokens,
 )
 
 
@@ -47,3 +49,21 @@ def test_cron_expression_roundtrip(db_session: Session) -> None:
     set_cron_expression(db_session, "0 6 * * *")
 
     assert get_cron_expression(db_session) == "0 6 * * *"
+
+
+def test_x_tokens_fall_back_to_env_when_nothing_stored(db_session: Session) -> None:
+    assert get_x_tokens(db_session, "env-access", "env-refresh") == ("env-access", "env-refresh")
+
+
+def test_x_tokens_prefer_stored_pair_descended_from_current_env(db_session: Session) -> None:
+    set_x_tokens(db_session, "new-access", "new-refresh", env_refresh_token="env-refresh")
+
+    assert get_x_tokens(db_session, "env-access", "env-refresh") == ("new-access", "new-refresh")
+
+
+def test_x_tokens_prefer_env_after_oauth_setup_is_rerun(db_session: Session) -> None:
+    set_x_tokens(db_session, "new-access", "new-refresh", env_refresh_token="env-refresh")
+
+    tokens = get_x_tokens(db_session, "fresh-access", "fresh-refresh")
+
+    assert tokens == ("fresh-access", "fresh-refresh")

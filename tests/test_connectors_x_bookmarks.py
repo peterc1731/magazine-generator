@@ -117,3 +117,30 @@ def test_expired_access_token_is_refreshed_and_retried() -> None:
 
     assert [item.source_item_id for item in result.items] == ["300"]
     assert bookmarks_route.calls[1].request.headers["Authorization"] == "Bearer new-token"
+
+
+@respx.mock
+def test_refreshed_tokens_are_passed_to_callback() -> None:
+    respx.get(BOOKMARKS_URL).side_effect = [
+        httpx.Response(401, json={"title": "Unauthorized"}),
+        httpx.Response(200, json={"data": [], "meta": {}}),
+    ]
+    respx.post(TOKEN_URL).mock(
+        return_value=httpx.Response(
+            200, json={"access_token": "new-token", "refresh_token": "new-refresh"}
+        )
+    )
+    refreshed: list[tuple[str, str | None]] = []
+    connector = XBookmarksConnector(
+        XBookmarksConfig(
+            user_id="123",
+            access_token="expired-token",
+            client_id="client-1",
+            refresh_token="old-refresh",
+            on_tokens_refreshed=lambda access, refresh: refreshed.append((access, refresh)),
+        )
+    )
+
+    connector.fetch_since(None)
+
+    assert refreshed == [("new-token", "new-refresh")]

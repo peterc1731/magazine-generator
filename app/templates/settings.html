@@ -10,10 +10,15 @@
   <label>Relevance threshold <span class="muted">(0-10; articles scoring below this are excluded)</span>
     <input type="number" step="0.5" min="0" max="10" name="relevance_threshold" value="{{ relevance_threshold }}">
   </label>
+  {% if schedule_managed_externally %}
+  <p class="muted">Schedule: managed by Cloud Scheduler — change <code>schedule</code> in
+    <code>deploy/terraform/variables.tf</code> and redeploy.</p>
+  {% else %}
   <label>Schedule <span class="muted">(cron expression, e.g. "0 8 * * MON" for weekly Monday 08:00 —
       restart the worker process to pick up a change)</span>
     <input type="text" name="cron_expression" value="{{ cron_expression }}">
   </label>
+  {% endif %}
   <button type="submit">Save</button>
 </form>
 {% endblock %}
