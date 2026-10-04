@@ -3,10 +3,24 @@ name: CI
 on:
   push:
   pull_request:
+  workflow_call: # reused by deploy.yml so nothing deploys without passing
 
 jobs:
   test:
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: magazine_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
     steps:
       - uses: actions/checkout@v4
 
@@ -21,5 +35,21 @@ jobs:
       - name: Lint
         run: uv run ruff check .
 
-      - name: Test
+      - name: Test (SQLite)
+        run: uv run pytest
+
+      # The Cloud Run deployment runs on Postgres — check the migrations
+      # apply cleanly there and match the models, then rerun the
+      # DB-backed tests against it.
+      - name: Migrations (Postgres)
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/magazine_test
+        run: |
+          uv run alembic upgrade head
+          uv run alembic check
+          uv run alembic downgrade base
+
+      - name: Test (Postgres)
+        env:
+          TEST_DATABASE_URL: postgresql+psycopg://postgres:postgres@localhost:5432/magazine_test
         run: uv run pytest

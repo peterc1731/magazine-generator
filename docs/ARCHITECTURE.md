@@ -56,7 +56,7 @@ management, schedule control, and issue history on top of the same database.
 | Concern | Choice | Why |
 |---|---|---|
 | Web API + UI | Python, FastAPI (+ Jinja2/HTMX or a small React admin panel) | One language across pipeline and web layer; minimal ceremony for a CRUD admin app |
-| Scheduling | APScheduler, persistent job store in SQLite | Weekly cadence doesn't need Celery/Redis; survives restarts, schedule editable from DB |
+| Scheduling | Cloud Scheduler → Cloud Run Job (Cloud Run deployment); APScheduler worker process (Compose deployment) | Weekly cadence doesn't need Celery/Redis; both trigger the same `execute_run()` code path |
 | Extraction | `trafilatura` (primary), Playwright + readability.js (fallback for JS-rendered pages) | Best-maintained boilerplate-removal + metadata library available |
 | Guardian content | Guardian Open Platform API (free tier) | Structured, clean article bodies — no scraping needed |
 | Newsletter content | Scrape each newsletter's public issue archive page (trafilatura on each issue URL) | Neither Dense Discovery nor bytes.dev publish RSS, but both publish every past issue on their site — no email infra needed |
@@ -64,10 +64,10 @@ management, schedule control, and issue history on top of the same database.
 | Classification + dedup | Claude API, batched prompts (`claude-haiku-4-5` for bulk scoring) | One batched call scores relevance and flags duplicate stories — no separate embeddings vendor/dependency |
 | ePub generation | `ebooklib` (+ Pillow for cover generation) | Full control over chapters/sections/nav/metadata, unlike Pandoc |
 | OPDS serving | Hand-rolled Atom/OPDS routes in FastAPI (`app/opds.py`) | Self-contained, testable with the same tools as the rest of the app; Calibre-backed remains an option to swap to later (§3.7) |
-| Database | SQLite via SQLAlchemy | Single user, weekly writes — no need for Postgres |
-| File storage | Local disk volume, optionally Cloudflare R2/Backblaze B2 | Cheap, simple; DB stores metadata + path/URL only |
-| Hosting | Single small VPS (Hetzner CX22 / DigitalOcean), Docker Compose | Always-on, cheap, full control; avoids serverless cold-start/storage complications |
-| Reverse proxy / auth | Caddy, HTTPS + HTTP basic auth | Simplest access control the e-reader's OPDS client will support |
+| Database | SQLAlchemy — serverless Postgres (Neon) on Cloud Run, SQLite on the Compose deployment / local dev | Cloud Run's service and job run on separate, ephemeral instances, so they can't share a SQLite file |
+| File storage | Local disk paths — a Cloud Storage bucket mounted as a volume on Cloud Run, a Docker volume on Compose | Cheap, simple, no storage-client code; DB stores metadata + path only |
+| Hosting | Google Cloud Run (service + jobs), Terraform + GitHub Actions; Docker Compose on a VM as the alternative | Scales to zero and fits the free tiers; the weekly batch doesn't need an always-on box |
+| Reverse proxy / auth | Cloud Run's built-in HTTPS (Caddy on Compose) + app-level HTTP basic auth | Simplest access control the e-reader's OPDS client will support |
 | Notifications | ntfy.sh or email on job failure | Lightweight, no extra infra |
 
 ## 3. Components
@@ -276,26 +276,55 @@ rather than waiting for the schedule.
 
 ## 7. Deployment
 
-Single VPS (Oracle Cloud's Always Free ARM tier, per Phase 9 — a real
-persistent VM suits this better than sleep-based PaaS free tiers), Docker
-Compose with services, all built from one image (`Dockerfile`):
+Two deployment shapes, both built from the one image (`Dockerfile`).
+Step-by-step instructions for each are in `README.md`'s "Deployment" section.
+
+### 7.1 Google Cloud Run (primary)
+
+Defined in `deploy/terraform/`, deployed by `.github/workflows/deploy.yml`
+on every push to `main` (GitHub authenticates via Workload Identity
+Federation, restricted to this repo's `main` branch):
+- `magazine-web` Cloud Run service (FastAPI — OPDS + UI), public at the
+  Cloud Run layer, scales to zero; app-level basic auth gates access.
+- `magazine-pipeline` Cloud Run Job (`scripts/run_now.py`), started weekly
+  by Cloud Scheduler, and on demand by the UI's "Run now" via the Cloud Run
+  Admin API (`app/cloud_run.py`, enabled by `PIPELINE_JOB_NAME`). The
+  schedule lives in Terraform, so the UI's cron setting is hidden here.
+- `magazine-migrate` Cloud Run Job (`alembic upgrade head`), executed by
+  the deploy workflow after pushing an image and before rolling it out —
+  containers don't migrate on start here (`RUN_MIGRATIONS_ON_START=false`).
+- Postgres (Neon, external to GCP) for structured state; a Cloud Storage
+  bucket mounted at `/mnt/storage` for article HTML, covers and epubs;
+  the production `.env` as one Secret Manager secret mounted at
+  `/secrets/env` (read via `ENV_FILE`).
+
+Terraform creates the Cloud Run resources with a placeholder image and
+ignores image changes afterwards; the workflow owns image rollout, so the
+migrate-then-roll-out ordering is explicit.
+
+### 7.2 Docker Compose on a VM
+
+Single VPS (Oracle Cloud's Always Free ARM tier, per Phase 9), Docker
+Compose with services:
 - `web` (FastAPI app — OPDS + UI)
 - `worker` (APScheduler process, same image, `command:` override)
 - `caddy` (reverse proxy, HTTPS via Let's Encrypt; app-level basic auth
   handles access control, per §3.7's decision to skip Calibre)
 
 Named volumes: `db` (SQLite file), `data` (cleaned article HTML + covers),
-`output` (generated epubs). Step-by-step provisioning instructions are in
-`README.md`'s "Deployment" section.
+`output` (generated epubs).
 
 ## 8. Security & Access
 
-- OPDS + web UI both sit behind Caddy with HTTPS + HTTP basic auth —
+- OPDS + web UI both sit behind HTTPS (Cloud Run's, or Caddy's on the
+  Compose deployment) + HTTP basic auth —
   sufficient since this is a single-user system and the e-reader's OPDS
   client supports basic auth in the catalog URL.
 - Secrets (Guardian API key, X OAuth client secret/refresh token, Claude
-  API key, email webhook signing secret) stored as environment variables /
-  Docker secrets, never committed.
+  API key, email webhook signing secret) stored in Secret Manager (Cloud
+  Run) or a `.env` file (Compose), never committed. The X token pair is the
+  exception once it's been refreshed: X rotates the refresh token on every
+  use, so the current pair is persisted in the `settings` table.
 
 ## 9. Observability
 

@@ -101,6 +101,128 @@ too (it's not currently split out separately).
 
 ## Deployment
 
+There are two supported ways to deploy this:
+
+- **Google Cloud Run (recommended).** Serverless: the web UI/OPDS
+  catalog scales to zero, the weekly run is a Cloud Run Job started by
+  Cloud Scheduler, and everything is defined in `deploy/terraform/` and
+  deployed by `.github/workflows/deploy.yml` on every push to `main`.
+  Fits inside GCP's free tiers at this project's scale.
+- **A VM running Docker Compose.** One persistent machine, SQLite on a
+  volume, no code or infra tooling beyond Docker. See
+  [Deploying to a VM with Docker Compose](#deploying-to-a-vm-with-docker-compose).
+
+### Deploying to Google Cloud Run
+
+What gets deployed (all in `deploy/terraform/`):
+
+| Piece | GCP resource |
+|---|---|
+| Web UI + OPDS | Cloud Run service `magazine-web` (public URL, HTTPS built in; app-level basic auth gates access) |
+| Weekly pipeline run | Cloud Run Job `magazine-pipeline`, started by Cloud Scheduler on `schedule` in `deploy/terraform/variables.tf` |
+| Schema migrations | Cloud Run Job `magazine-migrate`, run by the deploy workflow before each rollout |
+| Database | External Postgres — [Neon](https://neon.tech)'s free tier (scales to zero) is the intended choice |
+| Article HTML, covers, epubs | Cloud Storage bucket, mounted into the service and jobs at `/mnt/storage` |
+| Secrets | The whole production `.env`, as one Secret Manager secret (`magazine-env`), mounted as a file |
+| Images | Artifact Registry repo `magazine` |
+| CI → GCP auth | Workload Identity Federation (no service account keys in GitHub), restricted to this repo's `main` branch |
+
+The deploy workflow runs tests (`ci.yml`, including against Postgres),
+`terraform apply`, builds and pushes the image, runs migrations, then rolls
+the new image out to the pipeline job and the web service, and finally
+hits `/health`.
+
+I validated the Terraform (`terraform validate` and an offline `terraform
+plan` — 39 resources, no errors), built the image, and ran it locally the
+way Cloud Run will (Postgres, `.env` mounted at `/secrets/env`, migrations
+as a separate container, then the web service and a pipeline run). I did
+**not** run any of this against a real GCP project — no cloud account
+access from this environment — so the first real `bootstrap.sh` run is the
+first time it touches GCP.
+
+#### 1. One-time setup
+
+Prerequisites: [gcloud](https://cloud.google.com/sdk/docs/install) and
+[Terraform](https://developer.hashicorp.com/terraform/install) (>= 1.6)
+installed locally.
+
+1. **Create a GCP project** with billing linked (needed even to use the
+   free tiers). Use a project dedicated to this app — the deployer service
+   account gets admin-level roles in it (see `deploy/terraform/github.tf`).
+2. **Create a Postgres database.** On Neon: create a project (any region;
+   one near your Cloud Run region is nicer), and copy the connection string
+   (`postgresql://...?sslmode=require`). It works as-is — the app swaps in
+   the right driver.
+3. **Authenticate locally:**
+   ```bash
+   gcloud auth login
+   gcloud auth application-default login
+   ```
+4. **Optionally edit `deploy/terraform/variables.tf`** — `schedule` and
+   `time_zone` for the weekly run (defaults: Monday 08:00 UTC), `region`
+   (default `us-central1`; stay in us-central1/us-east1/us-west1 to keep
+   the bucket in Cloud Storage's free tier). Commit any change.
+5. **Run the bootstrap script** (creates the Terraform state bucket and
+   applies the Terraform once with your own credentials):
+   ```bash
+   deploy/bootstrap.sh <project-id> [region]
+   ```
+   If the first apply fails on a permission error for the new service
+   accounts, that's usually IAM propagation lag — wait a minute and rerun.
+6. **Upload the production `.env`.** Start from `.env.example`, fill in
+   API keys and X tokens as covered above, set `DATABASE_URL` to the Neon
+   connection string, and **set `OPDS_BASIC_AUTH_USER`/`PASSWORD`** — the
+   service is publicly reachable. Leave `DATA_DIR`/`ISSUES_DIR` alone and
+   skip `DOMAIN` (both are set by the deployment / not used). Then:
+   ```bash
+   gcloud secrets versions add magazine-env --project <project-id> --data-file=.env.production
+   ```
+   (`.env.production` is gitignored.)
+7. **Set the GitHub repository variables** the script printed (Settings →
+   Secrets and variables → Actions → *Variables* tab, not Secrets — none of
+   them are sensitive): `GCP_PROJECT_ID`, `GCP_REGION`, `TF_STATE_BUCKET`,
+   `GCP_WORKLOAD_IDENTITY_PROVIDER`, `GCP_DEPLOYER_SERVICE_ACCOUNT`.
+8. **Deploy:** push to `main`, or run the *Deploy* workflow manually from
+   the Actions tab.
+
+#### 2. Verify
+
+`terraform -chdir=deploy/terraform output web_url` gives the service URL
+(`https://magazine-web-....run.app`).
+
+- `curl https://<url>/health` → `{"status":"ok"}`
+- `https://<url>/ui/sources` → the web UI, behind basic auth. Seed the
+  default sources by running `scripts/seed_dev_data.py` locally with
+  `DATABASE_URL` pointed at the Neon database, or add them in the UI.
+- Trigger a run from `/ui/runs` — on Cloud Run, "Run now" starts the
+  pipeline job and returns immediately; refresh to watch it appear. Job
+  logs are under Cloud Run → Jobs → `magazine-pipeline` in the console.
+- Add `https://<url>/opds/` to your e-reader as an OPDS catalog. The first
+  request after the service has been idle takes a few seconds (cold start).
+
+#### Day to day
+
+- **Deploying:** merge to `main`. Infra changes go in `deploy/terraform/`
+  and are applied by the same workflow.
+- **Changing the schedule:** edit `schedule`/`time_zone` in
+  `deploy/terraform/variables.tf` and push. The cron field in
+  `/ui/settings` is hidden on this deployment, since Cloud Scheduler owns it.
+- **Changing secrets:** add a new version of `magazine-env` (same command
+  as step 6). Every pipeline run reads the latest version; a running web
+  instance keeps the settings it started with until it's replaced, which
+  happens on the next deploy or whenever it scales to zero.
+- **X tokens:** after the first refresh, the current X access/refresh
+  tokens live in the database (`settings` table), not the `.env`, because
+  X rotates the refresh token on every use. Re-running
+  `scripts/x_oauth_setup.py` and uploading a `.env` with the new tokens
+  takes over automatically.
+- **Custom domain:** the `run.app` URL works as-is. For your own domain,
+  Cloud Run domain mappings (available in a subset of regions, including
+  us-central1) or Firebase Hosting
+  in front are the free options; the HTTPS load balancer route costs ~$18/mo.
+
+### Deploying to a VM with Docker Compose
+
 Three containers, all built from the same image (`Dockerfile`): `web`
 (FastAPI — OPDS + the UI), `worker` (the scheduler), and `caddy` (HTTPS
 reverse proxy + automatic Let's Encrypt certs). One SQLite DB, shared
@@ -115,7 +237,7 @@ daemon or cloud account access here. The steps below are instructions to
 follow, not something I ran end-to-end myself; if anything doesn't match,
 that's the gap.
 
-### 1. Provision the server
+#### 1. Provision the server
 
 Any machine that can run Docker works; these steps assume Oracle Cloud's
 Always Free tier (see the chat history in this project for why — it's a
@@ -139,7 +261,7 @@ shape is wildly oversized for this workload).
      netfilter-persistent save` if that's installed, otherwise check
      Ubuntu's current recommended way to persist iptables rules).
 
-### 2. Point a domain at it
+#### 2. Point a domain at it
 
 Caddy's automatic HTTPS needs a real domain — it can't issue a certificate
 for a bare IP. If you don't already own one, a free option like
@@ -148,14 +270,14 @@ Create an A record (or DuckDNS subdomain) pointing at the static IP from
 step 1, and confirm it resolves (`dig +short yourdomain.example`) before
 continuing — Caddy will fail to get a certificate if DNS isn't live yet.
 
-### 3. Install Docker
+#### 3. Install Docker
 
 ```bash
 curl -fsSL https://get.docker.com | sh
 sudo usermod -aG docker $USER   # log out/in after this
 ```
 
-### 4. Get the code and configure it
+#### 4. Get the code and configure it
 
 ```bash
 git clone <this-repo-url>
@@ -180,7 +302,7 @@ Edit `.env`:
   (Four slashes in `DATABASE_URL` is correct — three for `sqlite://` plus
   the leading `/` of the absolute path.)
 
-### 5. Build and start
+#### 5. Build and start
 
 ```bash
 docker compose build
@@ -192,7 +314,7 @@ Each container runs migrations on startup (`docker/entrypoint.sh`) before
 starting its actual process, so the DB schema is always current — no
 separate migration step to remember.
 
-### 6. Verify
+#### 6. Verify
 
 - `curl -u user:pass https://yourdomain.example/health` → `{"status":"ok"}`
 - `https://yourdomain.example/ui/sources` in a browser → the web UI, prompting for basic auth
@@ -204,7 +326,7 @@ separate migration step to remember.
   download the issue — **this last check needs your actual e-reader**, not
   something verifiable any other way.
 
-### Updating
+#### Updating
 
 ```bash
 git pull
@@ -212,7 +334,7 @@ docker compose build
 docker compose up -d
 ```
 
-### Not covered here
+#### Not covered here
 
 Backups (the named volumes hold everything — `docker run --rm -v
 magazine-generator_db:/data -v $(pwd):/backup alpine tar czf

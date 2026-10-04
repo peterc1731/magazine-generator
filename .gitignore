@@ -11,3 +11,9 @@ dist/
 build/
 *.egg-info/
 output/
+.env.production
+
+# Terraform (deploy/terraform) — the lock file is committed, local state is not
+.terraform/
+*.tfstate
+*.tfstate.*

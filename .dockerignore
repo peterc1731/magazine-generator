@@ -8,3 +8,6 @@ __pycache__/
 *.db
 data/
 output/
+deploy/
+.github/
+tests/
