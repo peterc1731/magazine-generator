@@ -47,6 +47,12 @@
     <label>Link selector <span class="muted">(CSS selector matching each issue's &lt;a&gt;)</span>
       <input type="text" name="link_selector" value="{{ source.config.link_selector if source else '' }}">
     </label>
+    <label>Issue URL template <span class="muted">(optional — for archives whose issue list isn't
+        plain links, e.g. <code>https://www.densediscovery.com/archive/{number}/</code>; when set,
+        the archive URL and selector are ignored and issue numbers are probed directly)</span>
+      <input type="text" name="issue_url_template"
+             value="{{ source.config.issue_url_template if source and source.config.issue_url_template else '' }}">
+    </label>
     <label>Initial fetch limit <span class="muted">(most recent N issues on first run, default 5)</span>
       <input type="number" name="initial_fetch_limit"
              value="{{ source.config.initial_fetch_limit if source else '' }}">

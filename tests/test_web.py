@@ -261,6 +261,38 @@ def test_test_fetch_escapes_html_in_titles(
     assert "&lt;script&gt;" in response.text
 
 
+def test_create_numbered_web_archive_source(client: TestClient, session_factory) -> None:
+    response = client.post(
+        "/ui/sources",
+        data={
+            "name": "Dense Discovery",
+            "type": "web_archive",
+            "issue_url_template": "https://www.densediscovery.com/archive/{number}/",
+        },
+        follow_redirects=False,
+    )
+
+    assert response.status_code == 303
+    with session_factory() as db:
+        source = db.query(Source).filter_by(name="Dense Discovery").one()
+        assert source.config["issue_url_template"] == (
+            "https://www.densediscovery.com/archive/{number}/"
+        )
+
+
+def test_issue_url_template_must_contain_number_placeholder(client: TestClient) -> None:
+    response = client.post(
+        "/ui/sources",
+        data={
+            "name": "Dense Discovery",
+            "type": "web_archive",
+            "issue_url_template": "https://www.densediscovery.com/archive/",
+        },
+    )
+
+    assert response.status_code == 400
+
+
 def test_settings_defaults(client: TestClient) -> None:
     response = client.get("/ui/settings")
 

@@ -63,10 +63,17 @@ def create_source(
     archive_url: str = Form(""),
     link_selector: str = Form(""),
     initial_fetch_limit: str = Form(""),
+    issue_url_template: str = Form(""),
     db: Session = Depends(get_db),
 ) -> RedirectResponse:
     config = _config_from_form(
-        type, section, feed_url, archive_url, link_selector, initial_fetch_limit
+        type,
+        section,
+        feed_url,
+        archive_url,
+        link_selector,
+        initial_fetch_limit,
+        issue_url_template,
     )
     source = Source(name=name, type=SourceType(type), config=config)
     db.add(source)
@@ -95,6 +102,7 @@ def update_source(
     archive_url: str = Form(""),
     link_selector: str = Form(""),
     initial_fetch_limit: str = Form(""),
+    issue_url_template: str = Form(""),
     db: Session = Depends(get_db),
 ) -> RedirectResponse:
     source = db.get(Source, source_id)
@@ -102,7 +110,13 @@ def update_source(
         raise HTTPException(status_code=404, detail="Source not found")
     source.name = name
     source.config = _config_from_form(
-        type, section, feed_url, archive_url, link_selector, initial_fetch_limit
+        type,
+        section,
+        feed_url,
+        archive_url,
+        link_selector,
+        initial_fetch_limit,
+        issue_url_template,
     )
     db.commit()
     return RedirectResponse(url="/ui/sources", status_code=303)
@@ -153,6 +167,7 @@ def _config_from_form(
     archive_url: str,
     link_selector: str,
     initial_fetch_limit: str,
+    issue_url_template: str,
 ) -> dict:
     if type_ == SourceType.GUARDIAN_API.value:
         return {"section": section} if section else {}
@@ -160,6 +175,12 @@ def _config_from_form(
         return {"feed_url": feed_url}
     if type_ == SourceType.WEB_ARCHIVE.value:
         config: dict = {"archive_url": archive_url, "link_selector": link_selector}
+        if issue_url_template:
+            if "{number}" not in issue_url_template:
+                raise HTTPException(
+                    status_code=400, detail="Issue URL template must contain {number}"
+                )
+            config["issue_url_template"] = issue_url_template
         if initial_fetch_limit:
             config["initial_fetch_limit"] = int(initial_fetch_limit)
         return config
