@@ -181,3 +181,48 @@ def test_build_epub_drops_images_without_absolute_url(tmp_path: Path) -> None:
     bodies = _document_bodies(epub.read_epub(str(output_path)))
     chapter_body = next(body for body in bodies if "Article with relative image" in body)
     assert "paint1.jpg" not in chapter_body
+
+
+@respx.mock
+def test_build_epub_strips_image_sizing_attributes(tmp_path: Path) -> None:
+    # Guardian lead images carry width/height; readers then letterbox them
+    # in a tall box once the width is shrunk to the column.
+    respx.get("https://example.com/lead.jpg").mock(
+        return_value=httpx.Response(200, content=b"jpeg", headers={"content-type": "image/jpeg"})
+    )
+    articles = [
+        EpubArticleInput(
+            title="Article with sized image",
+            source_name="S",
+            html_body=(
+                '<figure><img src="https://example.com/lead.jpg" alt="lead" width="1000" '
+                'height="600" class="gu-image" srcset="https://example.com/lead-500.jpg 500w">'
+                "<figcaption>Caption</figcaption></figure>"
+            ),
+        )
+    ]
+    output_path = tmp_path / "issue.epub"
+
+    build_epub(articles, issue_title="Test Issue", output_path=output_path)
+
+    bodies = _document_bodies(epub.read_epub(str(output_path)))
+    chapter_body = next(body for body in bodies if "Article with sized image" in body)
+    for attribute in ("width=", "height=", "srcset=", "gu-image"):
+        assert attribute not in chapter_body
+    assert 'alt="lead"' in chapter_body
+
+
+def test_build_epub_ships_a_stylesheet_linked_from_each_chapter(tmp_path: Path) -> None:
+    articles = [EpubArticleInput(title="Styled", source_name="S", html_body="<p>Hi</p>")]
+    output_path = tmp_path / "issue.epub"
+
+    build_epub(articles, issue_title="Test Issue", output_path=output_path)
+
+    book = epub.read_epub(str(output_path))
+    styles = [item for item in book.get_items() if item.get_type() == ebooklib.ITEM_STYLE]
+    assert len(styles) == 1
+    css = styles[0].content.decode()
+    assert "height: auto" in css
+    assert "break-inside: avoid" in css
+    chapter_body = next(body for body in _document_bodies(book) if "Styled" in body)
+    assert styles[0].file_name in chapter_body

@@ -64,6 +64,11 @@ def build_epub(
         cover_bytes = _generate_cover_image(issue_title)
         book.set_cover("cover.jpg", cover_bytes)
 
+        stylesheet = epub.EpubItem(
+            uid="style", file_name=STYLESHEET_FILE, media_type="text/css", content=STYLESHEET
+        )
+        book.add_item(stylesheet)
+
         sections: dict[str, list[epub.EpubHtml]] = {}
         for index, article in enumerate(articles):
             rehosted_body = _rehost_images(book, article.html_body, client, image_ids)
@@ -71,6 +76,7 @@ def build_epub(
                 title=article.title, file_name=f"chapter_{index}.xhtml", lang="en"
             )
             chapter.content = _render_chapter(article, rehosted_body)
+            chapter.add_item(stylesheet)  # ebooklib writes the <link> into the head
             book.add_item(chapter)
             sections.setdefault(article.section or UNSECTIONED_LABEL, []).append(chapter)
 
@@ -89,6 +95,25 @@ def build_epub(
     finally:
         if owns_client:
             client.close()
+
+
+# Shipped with every chapter. Without it, readers fall back to their
+# defaults plus whatever markup came from the source — e.g. an <img> left
+# with width/height attributes renders as a tall letterboxed box once the
+# reader shrinks its width to the column, pushing its caption onto the next
+# page.
+STYLESHEET = """
+img { max-width: 100%; height: auto; display: block; margin: 0.8em auto; }
+figure { margin: 1em 0; break-inside: avoid; page-break-inside: avoid; }
+figure img { margin: 0 auto 0.4em; }
+figcaption { font-size: 0.85em; line-height: 1.35; opacity: 0.75; }
+p.byline { opacity: 0.75; }
+"""
+STYLESHEET_FILE = "style/main.css"
+
+# Attributes that size or source an image from the original page; dropped
+# so the stylesheet controls layout and nothing points back at the web.
+_IMG_ATTRIBUTES_DROPPED = ("width", "height", "srcset", "sizes", "style", "class", "loading")
 
 
 def _render_chapter(article: EpubArticleInput, html_body: str) -> str:
@@ -138,6 +163,8 @@ def _rehost_images(
             )
         )
         img["src"] = file_name
+        for attribute in _IMG_ATTRIBUTES_DROPPED:
+            del img[attribute]
 
     return str(soup)
 
