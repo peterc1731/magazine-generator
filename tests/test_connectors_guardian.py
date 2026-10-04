@@ -1,4 +1,5 @@
 import json
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
 import httpx
@@ -89,3 +90,16 @@ def test_non_image_main_media_is_skipped() -> None:
     result = connector.fetch_since(None)
 
     assert result.items[0].cleaned_html == "<p>Body</p>"
+
+
+@respx.mock
+def test_first_fetch_starts_from_recent_days_not_the_archive_start() -> None:
+    route = respx.get(GUARDIAN_API_BASE).mock(
+        return_value=httpx.Response(200, json=json.loads(FIXTURE.read_text()))
+    )
+    connector = GuardianAPIConnector(GuardianAPIConfig(api_key="test-key", initial_days=7))
+
+    connector.fetch_since(None)
+
+    expected = (datetime.now(UTC) - timedelta(days=7)).date().isoformat()
+    assert route.calls[0].request.url.params["from-date"] == expected

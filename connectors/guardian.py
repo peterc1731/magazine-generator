@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import UTC, datetime, timedelta
 
 import httpx
 
@@ -15,6 +15,10 @@ class GuardianAPIConfig:
     api_key: str
     section: str | None = None
     page_size: int = 20
+    initial_days: int = 7
+    """On a first run (no cursor), fetch articles from the last N days.
+    Without a start date, `order-by=oldest` returns the section's oldest
+    articles ever."""
 
 
 class GuardianAPIConnector:
@@ -41,6 +45,9 @@ class GuardianAPIConnector:
             params["section"] = self._config.section
         if cursor_dt is not None:
             params["from-date"] = cursor_dt.date().isoformat()
+        else:
+            since = datetime.now(UTC) - timedelta(days=self._config.initial_days)
+            params["from-date"] = since.date().isoformat()
 
         response = self._client.get(GUARDIAN_API_BASE, params=params)
         response.raise_for_status()

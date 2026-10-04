@@ -467,6 +467,29 @@ def test_settings_save_ignores_schedule_when_managed_by_cloud_scheduler(
         assert settings_store.get_cron_expression(db) == settings_store.DEFAULT_CRON_EXPRESSION
 
 
+def test_start_over_resets_and_reports_counts(client: TestClient, session_factory) -> None:
+    with session_factory() as db:
+        db.add(Source(name="BBC", type=SourceType.RSS, config={}, last_cursor="2026-10-01"))
+        db.commit()
+
+    response = client.post("/ui/issues/start-over")
+
+    assert response.status_code == 200  # followed the redirect back to /ui/issues
+    assert "Started over: deleted 0 issue(s) and 0 article(s)" in response.text
+    with session_factory() as db:
+        assert db.query(Source).one().last_cursor is None
+
+
+def test_start_over_reports_run_in_progress(client: TestClient, session_factory) -> None:
+    with session_factory() as db:
+        db.add(JobRun(status=JobStatus.RUNNING))
+        db.commit()
+
+    response = client.post("/ui/issues/start-over")
+
+    assert "A run is in progress" in response.text
+
+
 def test_issues_list_empty(client: TestClient) -> None:
     response = client.get("/ui/issues")
 

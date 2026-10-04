@@ -15,6 +15,7 @@ from app.models import Issue, JobRun, Source, SourceType
 from app.opds import require_auth
 from app.worker import execute_run
 from pipeline.connector_factory import build_connector
+from pipeline.reset import RunInProgressError, start_over
 from pipeline.settings_store import (
     get_cron_expression,
     get_interest_profile,
@@ -291,6 +292,25 @@ def run_now(settings: Settings = Depends(get_settings)) -> RedirectResponse:
 
 
 @router.get("/issues", response_class=HTMLResponse)
-def list_issues(request: Request, db: Session = Depends(get_db)) -> HTMLResponse:
+def list_issues(
+    request: Request,
+    reset: str | None = None,
+    reset_error: str | None = None,
+    db: Session = Depends(get_db),
+) -> HTMLResponse:
     issues = db.execute(select(Issue).order_by(Issue.issue_date.desc())).scalars().all()
-    return templates.TemplateResponse(request, "issues/list.html", {"issues": issues})
+    context = {"issues": issues, "reset": reset, "reset_error": reset_error}
+    return templates.TemplateResponse(request, "issues/list.html", context)
+
+
+@router.post("/issues/start-over")
+def start_over_issues(db: Session = Depends(get_db)) -> RedirectResponse:
+    """Wipes issues + articles and resets source cursors (pipeline/reset.py)
+    so the next run refetches everything — e.g. to redo issues after an
+    extraction fix."""
+    try:
+        issues_deleted, articles_deleted = start_over(db)
+    except RunInProgressError:
+        return RedirectResponse(url="/ui/issues?reset_error=running", status_code=303)
+    summary = f"{issues_deleted}-{articles_deleted}"
+    return RedirectResponse(url=f"/ui/issues?reset={summary}", status_code=303)

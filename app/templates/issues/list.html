@@ -2,6 +2,11 @@
 {% block title %}Issues — Magazine Generator{% endblock %}
 {% block content %}
 <h1>Issues</h1>
+{% if reset %}{% set counts = reset.split('-') %}
+<p class="muted">Started over: deleted {{ counts[0] }} issue(s) and {{ counts[1] }} article(s), and reset
+  every source. <a href="/ui/runs">Run now</a> to fetch everything again and build a fresh issue.</p>
+{% endif %}
+{% if reset_error %}<p class="error">A run is in progress — wait for it to finish, then try again.</p>{% endif %}
 <table>
   <tr><th></th><th>Date</th><th>Articles</th><th>Size</th><th></th></tr>
   {% for issue in issues %}
@@ -20,4 +25,13 @@
   <tr><td colspan="5" class="muted">No issues yet.</td></tr>
   {% endfor %}
 </table>
+
+<h2>Start over</h2>
+<p class="muted">Deletes every issue and fetched article and resets each source, so the next run fetches
+  everything again as if for the first time (Guardian: the last week; web archives: the latest few
+  issues) and builds a fresh issue with the current formatting. Sources and settings are kept.</p>
+<form method="post" action="/ui/issues/start-over"
+      onsubmit="return confirm('Delete all issues and fetched articles, and reset every source?');">
+  <button type="submit">Start over</button>
+</form>
 {% endblock %}
