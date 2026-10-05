@@ -1,3 +1,4 @@
+import zipfile
 from datetime import datetime
 from io import BytesIO
 from pathlib import Path
@@ -6,6 +7,7 @@ import ebooklib
 import httpx
 import respx
 from ebooklib import epub
+from lxml import etree
 from PIL import Image
 
 from pipeline.epub_builder import EpubArticleInput, _generate_cover_image, build_epub
@@ -226,3 +228,60 @@ def test_build_epub_ships_a_stylesheet_linked_from_each_chapter(tmp_path: Path) 
     assert "break-inside: avoid" in css
     chapter_body = next(body for body in _document_bodies(book) if "Styled" in body)
     assert styles[0].file_name in chapter_body
+
+
+
+def _chapter_xhtml(output_path: Path) -> bytes:
+    return zipfile.ZipFile(output_path).read("EPUB/chapter_0.xhtml")
+
+
+@respx.mock
+def test_build_epub_survives_unescaped_quotes_in_alt_text(tmp_path: Path) -> None:
+    # Real Guardian lead image: the quotes inside alt end the attribute
+    # early, leaving junk attributes like `keyboard"` that Apple Books
+    # rejects ("Specification mandates value for attribute keyboard").
+    respx.get("https://media.guim.co.uk/a.jpg").mock(
+        return_value=httpx.Response(200, content=b"jpeg", headers={"content-type": "image/jpeg"})
+    )
+    body = (
+        '<figure><img src="https://media.guim.co.uk/a.jpg" alt="Meta AI next to the '
+        '"keyboard" shortcut menu"><figcaption>Caption</figcaption></figure><p>Body text</p>'
+    )
+    output_path = tmp_path / "issue.epub"
+
+    build_epub(
+        [EpubArticleInput(title="Meta", source_name="S", html_body=body)],
+        issue_title="T",
+        output_path=output_path,
+    )
+
+    xhtml = _chapter_xhtml(output_path)
+    etree.fromstring(xhtml)  # strict XML, as e-readers parse it
+    assert b"images/img_0.jpg" in xhtml  # the image itself survives
+    assert b"Body text" in xhtml
+
+
+def test_build_epub_drops_undeclared_namespace_attributes(tmp_path: Path) -> None:
+    body = '<p fb:like="true" data-ok="1">Hello</p>'
+    output_path = tmp_path / "issue.epub"
+
+    build_epub(
+        [EpubArticleInput(title="NS", source_name="S", html_body=body)],
+        issue_title="T",
+        output_path=output_path,
+    )
+
+    xhtml = _chapter_xhtml(output_path)
+    etree.fromstring(xhtml)
+    assert b"fb:like" not in xhtml
+    assert b'data-ok="1"' in xhtml
+
+
+def test_ensure_valid_xhtml_falls_back_to_plain_text() -> None:
+    from pipeline.epub_builder import _ensure_valid_xhtml
+
+    broken = '<p a:b="1">First para</p><p>Second &amp; last</p>'
+
+    result = _ensure_valid_xhtml(broken, "Broken")
+
+    assert result == "<p>First para</p><p>Second &amp; last</p>"

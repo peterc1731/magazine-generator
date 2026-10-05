@@ -1,6 +1,9 @@
 from __future__ import annotations
 
+import html
 import itertools
+import logging
+import re
 from collections.abc import Iterator
 from dataclasses import dataclass
 from datetime import datetime
@@ -10,7 +13,11 @@ from pathlib import Path
 import httpx
 from bs4 import BeautifulSoup
 from ebooklib import epub
+from lxml import etree
+from lxml import html as lxml_html
 from PIL import Image, ImageDraw, ImageFont
+
+logger = logging.getLogger(__name__)
 
 COVER_SIZE = (1200, 1600)
 UNSECTIONED_LABEL = "Uncategorized"
@@ -71,7 +78,9 @@ def build_epub(
 
         sections: dict[str, list[epub.EpubHtml]] = {}
         for index, article in enumerate(articles):
-            rehosted_body = _rehost_images(book, article.html_body, client, image_ids)
+            rehosted_body = _ensure_valid_xhtml(
+                _rehost_images(book, article.html_body, client, image_ids), article.title
+            )
             chapter = epub.EpubHtml(
                 title=article.title, file_name=f"chapter_{index}.xhtml", lang="en"
             )
@@ -132,6 +141,38 @@ def _render_chapter(article: EpubArticleInput, html_body: str) -> str:
 </html>"""
 
 
+# An XML attribute name with no namespace prefix (xml:lang aside — its
+# prefix is predeclared). Anything else breaks the whole chapter in strict
+# XHTML readers like Apple Books.
+_XML_ATTRIBUTE_NAME = re.compile(r"^(?:[A-Za-z_][A-Za-z0-9_.\-]*|xml:lang)$")
+
+
+def _drop_invalid_attributes(soup: BeautifulSoup) -> None:
+    """Source HTML is sloppier than XHTML allows. E.g. an alt text with
+    unescaped quotes, `alt="the "keyboard" menu"`, parses as junk attributes
+    named `keyboard"` and `menu"`; written into the epub, readers reject the
+    chapter ("Specification mandates value for attribute keyboard")."""
+    for element in soup.find_all(True):
+        for name in [name for name in element.attrs if not _XML_ATTRIBUTE_NAME.match(name)]:
+            del element[name]
+
+
+def _ensure_valid_xhtml(html_body: str, title: str) -> str:
+    """Checks the body survives the same HTML→XHTML round trip ebooklib does
+    when writing the chapter, and parses as strict XML. If not, falls back to
+    the body's text as plain paragraphs — a readable article beats a page
+    that shows a parse error."""
+    try:
+        fragment = lxml_html.fragment_fromstring(html_body, create_parent="div")
+        etree.fromstring(etree.tostring(fragment))
+        return html_body
+    except (etree.ParserError, etree.XMLSyntaxError, ValueError) as exc:
+        logger.warning("Article %r isn't valid XHTML (%s); using plain text", title, exc)
+    text = BeautifulSoup(html_body, "html.parser").get_text("\n")
+    paragraphs = [line.strip() for line in text.splitlines() if line.strip()]
+    return "".join(f"<p>{html.escape(paragraph)}</p>" for paragraph in paragraphs)
+
+
 def _rehost_images(
     book: epub.EpubBook, html_body: str, client: httpx.Client, image_ids: Iterator[int]
 ) -> str:
@@ -140,6 +181,7 @@ def _rehost_images(
     isn't recognized as an image is dropped rather than left dangling.
     """
     soup = BeautifulSoup(html_body, "html.parser")
+    _drop_invalid_attributes(soup)
     for img in soup.find_all("img"):
         src = img.get("src")
         if not src or not src.startswith(("http://", "https://")):
