@@ -9,6 +9,7 @@ from dataclasses import dataclass
 from datetime import datetime
 from io import BytesIO
 from pathlib import Path
+from urllib.parse import urlsplit
 
 import httpx
 from bs4 import BeautifulSoup
@@ -16,6 +17,8 @@ from ebooklib import epub
 from lxml import etree
 from lxml import html as lxml_html
 from PIL import Image, ImageDraw, ImageFont
+
+from pipeline.clutter import remove_empty_containers, strip_clutter
 
 logger = logging.getLogger(__name__)
 
@@ -178,18 +181,24 @@ def _rehost_images(
 ) -> str:
     """Downloads each remote <img> in `html_body` and rewrites its src to a
     local file added to the book's manifest. An image that fails to fetch or
-    isn't recognized as an image is dropped rather than left dangling.
+    isn't recognized as an image is dropped rather than left dangling, as
+    are GIFs (usually animations; an e-reader shows at best one frame).
+    Share buttons and embedded media are stripped first (pipeline/clutter).
     """
     soup = BeautifulSoup(html_body, "html.parser")
     _drop_invalid_attributes(soup)
+    strip_clutter(soup)
     for img in soup.find_all("img"):
         src = img.get("src")
         if not src or not src.startswith(("http://", "https://")):
             img.decompose()  # relative/data/missing src — nothing an e-reader could load
             continue
+        if urlsplit(src).path.lower().endswith(".gif"):
+            img.decompose()  # skip the download too
+            continue
 
         image_bytes, media_type = _fetch_image(client, src)
-        if image_bytes is None:
+        if image_bytes is None or media_type == "image/gif":
             img.decompose()
             continue
 
@@ -208,6 +217,7 @@ def _rehost_images(
         for attribute in _IMG_ATTRIBUTES_DROPPED:
             del img[attribute]
 
+    remove_empty_containers(soup)
     return str(soup)
 
 

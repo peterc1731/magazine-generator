@@ -285,3 +285,45 @@ def test_ensure_valid_xhtml_falls_back_to_plain_text() -> None:
     result = _ensure_valid_xhtml(broken, "Broken")
 
     assert result == "<p>First para</p><p>Second &amp; last</p>"
+
+
+
+@respx.mock
+def test_build_epub_drops_gifs_by_extension_without_downloading(tmp_path: Path) -> None:
+    gif_route = respx.get("https://example.com/anim.gif")
+    articles = [
+        EpubArticleInput(
+            title="Gif article",
+            source_name="S",
+            html_body='<p>Mood:</p><p><img src="https://example.com/anim.gif"></p><p>After</p>',
+        )
+    ]
+    output_path = tmp_path / "issue.epub"
+
+    build_epub(articles, issue_title="Test Issue", output_path=output_path)
+
+    assert not gif_route.called
+    xhtml = _chapter_xhtml(output_path)
+    assert b"anim.gif" not in xhtml
+    assert b"<p/>" not in xhtml  # the paragraph that only held the gif goes too
+    assert b"After" in xhtml
+
+
+@respx.mock
+def test_build_epub_drops_images_served_as_gif(tmp_path: Path) -> None:
+    respx.get("https://example.com/image?id=1").mock(
+        return_value=httpx.Response(200, content=b"GIF89a", headers={"content-type": "image/gif"})
+    )
+    articles = [
+        EpubArticleInput(
+            title="Disguised gif",
+            source_name="S",
+            html_body='<p>Text</p><img src="https://example.com/image?id=1">',
+        )
+    ]
+    output_path = tmp_path / "issue.epub"
+
+    build_epub(articles, issue_title="Test Issue", output_path=output_path)
+
+    book = epub.read_epub(str(output_path))
+    assert [i for i in book.get_items() if i.get_type() == ebooklib.ITEM_IMAGE] == []
