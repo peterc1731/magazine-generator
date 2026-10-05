@@ -4,6 +4,7 @@ from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
 
 import httpx
+from bs4 import BeautifulSoup
 
 from connectors.base import FetchResult, RawItem
 
@@ -83,11 +84,40 @@ def _with_main_image(fields: dict) -> str | None:
     """The body plus the article's lead image. The API keeps the lead
     media in a separate `main` field (the body only has inline images);
     it's skipped when it isn't an image (e.g. a video embed)."""
-    body = fields.get("body")
+    body = _strip_promos(fields["body"]) if fields.get("body") else None
     main = fields.get("main") or ""
     if body and "<img" in main:
         return main + body
     return body
+
+
+# Short, link-led lines the Guardian drops into article bodies, e.g.
+# "Sign up for Guardian Australia's Politics, really newsletter here".
+_PROMO_PREFIXES = ("sign up for", "sign up to", "get our ")
+_PROMO_MAX_LENGTH = 200
+
+
+def _strip_promos(body: str) -> str:
+    """Removes newsletter/app sign-up lines and related-story boxes from an
+    article body. A line only counts as a promo when it's short, starts
+    with a promo phrase and contains a link — so ordinary prose survives."""
+    soup = BeautifulSoup(body, "html.parser")
+    for aside in soup.select("aside.element-rich-link"):
+        aside.decompose()
+    for element in soup.find_all(["li", "p"]):
+        if element.decomposed:  # inside an <li> already removed
+            continue
+        text = " ".join(element.get_text(" ").split()).lower()
+        if (
+            text.startswith(_PROMO_PREFIXES)
+            and len(text) <= _PROMO_MAX_LENGTH
+            and element.find("a") is not None
+        ):
+            parent = element.parent
+            element.decompose()
+            if parent is not None and parent.name in ("ul", "ol") and not parent.find("li"):
+                parent.decompose()
+    return str(soup)
 
 
 def _parse_cursor(value: str | None) -> datetime | None:

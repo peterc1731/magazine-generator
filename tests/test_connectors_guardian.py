@@ -5,7 +5,12 @@ from pathlib import Path
 import httpx
 import respx
 
-from connectors.guardian import GUARDIAN_API_BASE, GuardianAPIConfig, GuardianAPIConnector
+from connectors.guardian import (
+    GUARDIAN_API_BASE,
+    GuardianAPIConfig,
+    GuardianAPIConnector,
+    _strip_promos,
+)
 
 FIXTURE = Path(__file__).parent / "fixtures" / "guardian" / "search_response.json"
 
@@ -103,3 +108,37 @@ def test_first_fetch_starts_from_recent_days_not_the_archive_start() -> None:
 
     expected = (datetime.now(UTC) - timedelta(days=7)).date().isoformat()
     assert route.calls[0].request.url.params["from-date"] == expected
+
+
+def test_strip_promos_removes_newsletter_signup_and_related_links() -> None:
+    body = (
+        "<p>The chief executive will turn down an invitation.</p>"
+        '<ul><li><p><strong><a href="https://www.theguardian.com/newsletters">'
+        "Sign up for Guardian Australia\u2019s Politics, really newsletter here</a></strong></p>"
+        "</li></ul>"
+        '<p><strong><a href="https://www.theguardian.com/email">Get our breaking news email'
+        "</a></strong></p>"
+        '<aside class="element element-rich-link"><p>Related: <a href="/x">Other story</a></p>'
+        "</aside>"
+        "<p>Neither company could be compelled to appear.</p>"
+    )
+
+    cleaned = _strip_promos(body)
+
+    assert "Sign up" not in cleaned
+    assert "breaking news email" not in cleaned
+    assert "Other story" not in cleaned
+    assert "<ul>" not in cleaned  # the list emptied by the removal goes too
+    assert "turn down an invitation" in cleaned
+    assert "compelled to appear" in cleaned
+
+
+def test_strip_promos_keeps_prose_that_merely_starts_like_a_promo() -> None:
+    body = (
+        '<p>Get our view: the <a href="/x">policy</a> was always going to fail, critics say, '
+        "because nobody had asked the people it affected what they actually needed, and the "
+        "consultation that followed was too little and far too late to change anything.</p>"
+        "<p>Sign up for the scheme opened on Monday without any link at all.</p>"
+    )
+
+    assert _strip_promos(body) == body
